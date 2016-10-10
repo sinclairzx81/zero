@@ -1,6 +1,8 @@
 # zero-n
 
-A 3D graphics rendering pipeline, implemented in JavaScript for small terminal displays.
+A 3D graphics rendering pipeline, implemented in JavaScript for terminal displays.
+
+![alt tag](./demo/screen.png)
 
 ## overview
 
@@ -37,4 +39,4 @@ tsc -p tsconfig.json
 node bin/demo/app
 ```
 
-![alt tag](./demo/screen.png)
+
