@@ -1,6 +1,6 @@
 /*--------------------------------------------------------------------------
 
-terminal-graphics
+zero-n - a nodejs 3D renderer written with pure javascript.
 
 The MIT License (MIT)
 
