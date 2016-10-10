@@ -33,7 +33,7 @@ these things to build.
 
 ```
 npm install typescript@2.0.2
-tsc tsconfig.json
+tsc -p tsconfig.json
 node bin/demo/app
 ```
 
