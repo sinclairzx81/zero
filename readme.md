@@ -24,7 +24,7 @@ zero includes.
 - terminal display device (for ascii terminal rendering as default)
 - A fixed memory footprint, and no GC leaks.
 
-## building and running demo.
+## building and running the demo
 
 zero-n is written using the TypeScript 2.0.2 compiler and Node 6.x you will need to install
 these things to build.
