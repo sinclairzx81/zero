@@ -1,6 +1,6 @@
 # zero-n
 
-A software 3D graphics rendering pipeline, implemented in JavaScript for small text based terminal displays.
+A 3D graphics rendering pipeline, implemented in JavaScript for small terminal displays.
 
 ## overview
 
