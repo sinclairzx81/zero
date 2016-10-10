@@ -1,6 +1,6 @@
 # zero-n
 
-A 3D graphics rendering pipeline, implemented in JavaScript for terminal displays.
+3D graphics rendering pipeline, implemented in JavaScript. Run in a terminal window.
 
 ![alt tag](./demo/screen.png)
 
