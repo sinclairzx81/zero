@@ -6,7 +6,6 @@
     "outDir"             : "./bin"
   },
   "files" : [
-    "./demo/app.ts",
-    "./demo/test.ts"
+    "./demo/app.ts"
   ]
 }
