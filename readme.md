@@ -6,24 +6,26 @@
 
 ## overview
 
-Ever wanted to render interactive 3D graphics in your terminal?
+Ever wanted to render interactive 3D graphics in a terminal window?
 
-zero-n is a small software 3D renderer written in JavaScript that 
-can turn your nodejs terminal into a interactive 3D scene. This software 
+zero-n is a small software 3D renderer written for nodejs that 
+allows for interactive 3D renderings in the terminal. This software 
 attempts to emulate parts of a modern graphics pipeline, going as far 
 to implement programmable vertex and fragment stages.
 
 zero-n was written as a small weekend project to see what was 
 reasonably possible to implement with JavaScript alone without
-adversely effecting performance. As it turns out, quite a lot.
+adversely effecting performance, and to go through the motions of
+implementing a software GPU reference device from the ground up.
 
-This project is offered as is for anyone who finds it useful
-or interesting.
+This project is offered as is for anyone who finds it useful,
+educational or just or interesting.
 
 zero includes.
-- support vector and matrix math libraries.
-- programmable vertex and fragment stages with overly optimized vector math support.
-- terminal display device (for ascii terminal rendering as default)
+- common vector and matrix math libraries.
+- programmable vertex and fragment stages in javascript.
+- built in display type for rendering ascii shaded imagary. 
+- extension points for rendering to non terminal displays.
 - A fixed memory footprint, and no GC leaks.
 
 ## building and running the demo

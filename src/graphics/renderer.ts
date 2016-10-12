@@ -36,6 +36,9 @@ import {Program}        from "./program"
 
 const FLOAT32_MAX = 2147483647
 
+/**
+ * vertex program input attributes.
+ */
 export interface VertexProgramIn {
   position   : Float32Array
   color?     : Float32Array
@@ -44,6 +47,9 @@ export interface VertexProgramIn {
   texcoord?  : Float32Array
 }
 
+/**
+ * vertex program output attributes.
+ */
 export interface VertexProgramOut {
   position   : Float32Array
   color?     : Float32Array
@@ -52,43 +58,53 @@ export interface VertexProgramOut {
   texcoord?  : Float32Array
 }
 
+export type ProgramUniforms = any
+
 /**
  * vertex program function.
  * @param {Program} the shader program context.
- * @param {any} uniforms bound to the renderer.
+ * @param {ProgramUniforms} uniforms bound to the renderer.
  * @param {VertexProgramIn} the vertex input.
  * @returns {VertexProgramOut} the vertex output.
  */
 export interface VertexProgramFunction {
-  (program: Program, uniforms: any, input: VertexProgramIn): VertexProgramOut
+  (program: Program, uniforms: ProgramUniforms, input: VertexProgramIn): VertexProgramOut
 }
 
 /**
  * fragment program function.
  * @param {Program} the shader program context.
- * @param {any} uniforms bound to the renderer.
+ * @param {ProgramUniforms} uniforms bound to the renderer.
  * @param {VertexProgramOut} the interpolated vertex program output.
- * @returns {VertexProgramOut} the vertex output.
+ * @returns {Float32Array} the output color.
  */
 export interface FragmentProgramFunction {
-  (program: Program, uniforms: any, varying: VertexProgramOut): Float32Array
+  (program: Program, uniforms: ProgramUniforms, varying: VertexProgramOut): Float32Array
 }
 
-export class Renderer {
+export class Device {
+  // clipspace coordinate registers.
+  private clipspace = {
+    v0: new Float32Array([0, 0]),
+    v1: new Float32Array([0, 0]),
+    v2: new Float32Array([0, 0])
+  }
+  // varying attribute registers.
   private varying = {
     position  : new Float32Array([0, 0, 0, 0]),
     color     : new Float32Array([0, 0, 0, 0]),
     normal    : new Float32Array([0, 0, 0, 0]),
     tangent   : new Float32Array([0, 0, 0, 0]),
-    texcoord  : new Float32Array([0, 0, 0, 0]),
-    depth     : new Float32Array([0])
+    texcoord  : new Float32Array([0, 0, 0, 0])
   }
+  
   private midpoint         : Float32Array
   private viewport         : Viewport
   private pixelbuffer      : PixelBuffer
   private rasterizer       : Rasterizer
-  private program_memory   : VolitileMemory
+  private memory           : VolitileMemory
   private program          : Program
+
   private vertexprogram    : VertexProgramFunction
   private fragmentprogram  : FragmentProgramFunction
   public  uniforms         : any
@@ -100,15 +116,15 @@ export class Renderer {
    * @returns {Renderer}
    */
   constructor(public display: Display) {
-    this.viewport          = new Viewport     (0, 0, this.display.width(), this.display.height())
-    this.midpoint          = new Float32Array ([this.display.width() / 2, this.display.height() / 2])
-    this.pixelbuffer       = new PixelBuffer  (this.display.width(), this.display.height())
-    this.rasterizer        = new Rasterizer   (this.viewport)
-    this.vertexprogram     = undefined
-    this.fragmentprogram   = undefined
-    this.program_memory    = new VolitileMemory(4096)
-    this.program           = new Program(this.program_memory)
-    this.uniforms          = {}
+    this.viewport         = new Viewport     (0, 0, this.display.width(), this.display.height())
+    this.midpoint         = new Float32Array ([this.display.width() / 2, this.display.height() / 2])
+    this.pixelbuffer      = new PixelBuffer  (this.display.width(), this.display.height())
+    this.rasterizer       = new Rasterizer   (this.viewport)
+    this.vertexprogram    = undefined
+    this.fragmentprogram  = undefined
+    this.memory           = new VolitileMemory(4096)
+    this.program          = new Program(this.memory)
+    this.uniforms         = {}
   }
 
   /**
@@ -144,36 +160,28 @@ export class Renderer {
   }
 
   /**
-   * computes the depth component using barycentric interpolation across the w component.
-   * @param {Float32Array} the first vs out position.
-   * @param {Float32Array} the first vs out position.
-   * @param {Float32Array} the first vs out position.
-   * @param {number} the first offset value.
-   * @param {number} the second offset value.
-   * @param {Float32Array} single value output vector.
-   * @returns {void}
+   * computes the triangle visibility, testing for CCW winding order.
+   * @param {Float32Array} triangle vector[0]
+   * @param {Float32Array} triangle vector[1]
+   * @param {Float32Array} triangle vector[2]
+   * @returns {boolean} 
    */
-  private depth3(v0: Float32Array, v1: Float32Array, v2: Float32Array, offset0: number, offset1: number, out: Float32Array): void {
-     out[0] = (v0[3] + (offset0 * (v1[3] - v0[3]))) + (offset1 * (v2[3] - v0[3]))
-  }  
+  private visible(v0: Float32Array, v1: Float32Array, v2: Float32Array): boolean {
+    return (((v1[0] - v0[0]) * (v2[1] - v0[1])) - ((v1[1] - v0[1]) * (v2[0] - v0[0])) >= 0) ? true : false
+  }
 
   /**
-   * interpolates the given inputs using the barycentric coordinate offsets given by the rasterizer.
-   * @param {Float32Array} the first vs out position.
-   * @param {Float32Array} the first vs out position.
-   * @param {Float32Array} the first vs out position.
-   * @param {number} the first offset value.
-   * @param {number} the second offset value.
-   * @param {Float32Array} single value output vector.
+   * for the given vectors and weights, compute the interpolation and store in out.
+   * @param {Float32Array} vector 0
+   * @param {Float32Array} vector 1
+   * @param {Float32Array} vector 2
    */
-  private interpolate3(v0: Float32Array, v1: Float32Array, v2: Float32Array, offset0: number, offset1: number, out: Float32Array) : void {
-    if(v0 === undefined || v1 === undefined || v2 === undefined) {
-      for (let i = 0; i < out.length; i++) {
-        out[i] = 0
-      } return
-    }
-    for (let i = 0; i < out.length; i++) {
-      out[i] = (v0[i] + (offset0 * (v1[i] - v0[i]))) + (offset1 * (v2[i] - v0[i]))
+  private interpolate(v0: Float32Array, v1: Float32Array, v2: Float32Array, weights: Float32Array, out: Float32Array): void {
+    if(v0 === undefined) return
+    for(let i = 0; i < v0.length; i++) {
+      out[i] = weights[0] * v0[i] + 
+               weights[1] * v1[i] + 
+               weights[2] * v2[i]
     }
   }
 
@@ -185,36 +193,54 @@ export class Renderer {
    * @returns {void}
    */
   public triangle(v0: VertexProgramIn, v1: VertexProgramIn, v2: VertexProgramIn): void {
-
+    
+    // execute vertex programs.
     let vs0 = this.vertexprogram(this.program, this.uniforms, v0)
     let vs1 = this.vertexprogram(this.program, this.uniforms, v1)
     let vs2 = this.vertexprogram(this.program, this.uniforms, v2)
-    this.rasterizer.triangle(vs0.position, vs1.position, vs2.position, (address, offset0, offset1) => {
-      // load pointer into pixel buffer.
-      let pixel = this.pixelbuffer.pointer(address)
 
-      // calculate fragment depth.
-      this.depth3 (vs0.position, vs1.position, vs2.position, offset0, offset1, this.varying.depth)
-      if(this.varying.depth[3] < 0.1)       return 
-      if(pixel[5] <= this.varying.depth[0]) return
+    // project vs*.position in into clip space.
+    this.clipspace.v0[0] = ((vs0.position[0] / vs0.position[3]) * this.viewport.width())  + this.midpoint[0]
+    this.clipspace.v0[1] = ((vs0.position[1] / vs0.position[3]) * this.viewport.height()) + this.midpoint[1]
+    this.clipspace.v1[0] = ((vs1.position[0] / vs1.position[3]) * this.viewport.width())  + this.midpoint[0]
+    this.clipspace.v1[1] = ((vs1.position[1] / vs1.position[3]) * this.viewport.height()) + this.midpoint[1]
+    this.clipspace.v2[0] = ((vs2.position[0] / vs2.position[3]) * this.viewport.width())  + this.midpoint[0]
+    this.clipspace.v2[1] = ((vs2.position[1] / vs2.position[3]) * this.viewport.height()) + this.midpoint[1]
+
+    // run visibility test on clip space.
+    if(this.visible(this.clipspace.v0, this.clipspace.v1, this.clipspace.v2) === false) return
+
+    // begin rasterization.
+    this.rasterizer.triangle(this.clipspace.v0, this.clipspace.v1, this.clipspace.v2, (address, weights) => {
+
+      // load pixel pointer.
+      let pointer = this.pixelbuffer.pointer(address)
+
+      // interpolate the position.
+      this.interpolate(vs0.position, vs1.position, vs2.position, weights, this.varying.position)
+
+      // todo: calculate fragment depth. (needs work.)
+      let depth = this.varying.position[3]
+      if(depth < 0.1)         return 
+      if(pointer[5] <= depth) return
 
       // interpolate attributes
-      this.interpolate3(vs0.color,    vs1.color,    vs2.color,    offset0, offset1, this.varying.color)
-      this.interpolate3(vs0.normal,   vs1.normal,   vs2.normal,   offset0, offset1, this.varying.normal)
-      this.interpolate3(vs0.tangent,  vs1.tangent,  vs2.tangent,  offset0, offset1, this.varying.tangent)
-      this.interpolate3(vs0.texcoord, vs1.texcoord, vs2.texcoord, offset0, offset1, this.varying.texcoord)
+      this.interpolate(vs0.color,    vs1.color,    vs2.color,    weights, this.varying.color)
+      this.interpolate(vs0.normal,   vs1.normal,   vs2.normal,   weights, this.varying.normal)
+      this.interpolate(vs0.tangent,  vs1.tangent,  vs2.tangent,  weights, this.varying.tangent)
+      this.interpolate(vs0.texcoord, vs1.texcoord, vs2.texcoord, weights, this.varying.texcoord)
 
-      // compute color from fragment shader.
+      // execute fragment shader.
       let color = this.fragmentprogram(this.program, this.uniforms, this.varying)
-      pixel[0] = color[0]
-      pixel[1] = color[1]
-      pixel[2] = color[2]
-      pixel[3] = color[3]
-      pixel[4] = 0
-      pixel[5] = this.varying.depth[0]
+      pointer[0] = color[0]
+      pointer[1] = color[1]
+      pointer[2] = color[2]
+      pointer[3] = color[3]
+      pointer[4] = 0
+      pointer[5] = depth
     })
   }
-
+  
   /**
    * submits the pixel buffer to the display.
    * @returns {void}

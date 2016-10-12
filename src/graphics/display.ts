@@ -97,7 +97,7 @@ export class TerminalDisplay implements Display {
         let pixel  = pixelbuffer.pixels[y][x]
         let color  = pixel[0] // only red
         if(color <= 0) color = 0
-        if(color >  1) color = 1
+        if(color >= 1) color = 1
         let sample = this.ramp[Math.floor((1.0 - pixel[0]) * (this.ramp.length - 1))]
         this.buffer[idx] = sample
         idx += 1

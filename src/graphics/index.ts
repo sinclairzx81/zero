@@ -28,10 +28,10 @@ THE SOFTWARE.
 
 import { Display }          from "./display"
 import { TerminalDisplay }  from "./display"
-import { Renderer }         from "./renderer"
+import { Device }         from "./renderer"
 
 export {
   Display,
   TerminalDisplay,
-  Renderer
+  Device
 }

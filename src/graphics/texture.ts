@@ -25,47 +25,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
-/// <reference path="@types/node/node.d.ts" />
 
-import {
-  TerminalDisplay,
-  Display,
-  Device
-} from "./graphics/index"
+export class Texture {
 
-import {
-  Box,
-  Frustum,
-  Matrix,
-  Plane,
-  Quaternion,
-  Radian,
-  Ray,
-  Sphere,
-  Triangle,
-  Vector2,
-  Vector3,
-  Vector4,
-  VectorN
-} from "./math/index"
-
-export {
-  // renderer.
-  TerminalDisplay,
-  Display,
-  Device,
-  // math
-  Box,
-  Frustum,
-  Matrix,
-  Plane,
-  Quaternion,
-  Radian,
-  Ray,
-  Sphere,
-  Triangle,
-  Vector2,
-  Vector3,
-  Vector4,
-  VectorN
+  /**
+   * creates a new texture object.
+   * @param {number} the width of this texture.
+   * @param {number} the height of this texture.
+   * @returns {Texture}
+   */
+  constructor(public width: number, public height: number) {
+    // todo: 
+  }
 }

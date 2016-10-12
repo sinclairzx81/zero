@@ -33,63 +33,6 @@ import {Viewport} from "./viewport"
 //---------------------------------------------
 
 /**
- * subtracts the left register from the right register.
- * @param {Float32Array} the left register.
- * @param {Float32Array} the right register.
- * @param {Float32Array} the output register.
- * @returns {Array<number>}
- */
-export function sub (v0: Float32Array, v1:Float32Array, out: Float32Array): void {
-  for (let i = 0; i < v0.length; i++) {
-    out[i] = v0[i] - v1[i]
-  }
-}
-
-/**
- * computes the dot product between the given two vectors.
- * @param {Float32Array} the vector register.
- * @param {Float32Array} the normal register.
- * @param {Float32Array} single unit output register.
- * @returns {void} 
- */
-export function dot(v0: Float32Array, n0: Float32Array, out: Float32Array): void {
-  let num = 0
-  for (let i = 0; i < v0.length; i++) {
-    num += (v0[i] * n0[i])
-  } out[0] = num
-}
-
-/**
- * returns the length of the given vector.
- * @param {Float32Array} the vector
- * @param {Float32Array} single unit output register.
- * @returns {void}
- */
-export function len(v0: Float32Array, out: Float32Array): void {
-  let num = 0
-  for (let i = 0; i < v0.length; i++)
-    num += (v0[i] * v0[i])
-  out[0] = Math.sqrt(num)
-}
-
-/**
- * normalizes the given vector.
- * @param {Float32Array} the vector.
- * @param {Float32Array} output register.
- * @returns {void}
- */
-const normalize_accumulator = new Float32Array([0])
-export function normalize(v0: Float32Array, out: Float32Array) : void {
-  normalize_accumulator[0]  = 0
-  for(let i = 0; i < v0.length; i++)
-    normalize_accumulator[0] += (v0[i] * v0[i])
-  normalize_accumulator[0] = 1.0 / Math.sqrt(normalize_accumulator[0])
-  for(let i = 0; i < v0.length; i++) {
-    out[i] = v0[i] * normalize_accumulator[0]
-  }
-}
-
-/**
  * The primitive rasterization function.
  * @param {Int16Array} the output address.
  * @returns {void}
@@ -176,25 +119,7 @@ export class TriangleRasterizer {
    * @returns {Triangle}
    */
   constructor(private viewport: Viewport) {}
-
-  /**
-   * computes the triangle visibility, testing for CCW winding order.
-   * @param {Float32Array} triangle vector[0]
-   * @param {Float32Array} triangle vector[1]
-   * @param {Float32Array} triangle vector[2]
-   * @returns {boolean} 
-   */
-  private vdelta = new Float32Array([0, 0, 0, 0])
-  private visible(v0: Float32Array, v1: Float32Array, v2: Float32Array): boolean {
-    this.vdelta[0] = v1[0] - v0[0]
-    this.vdelta[1] = v1[1] - v0[1]
-    this.vdelta[2] = v2[0] - v0[0]
-    this.vdelta[3] = v2[1] - v0[1]
-    return (this.vdelta[0] * this.vdelta[3]) -
-      (this.vdelta[1] * this.vdelta[2]) < 0
-      ? false : true
-  }
-
+  
   /**
    * A mutable swap operation.
    * @param {Int16Array} triangle vector[0]
@@ -259,15 +184,13 @@ export class TriangleRasterizer {
 
   /**
    * scanline triangle rasterizer. reference implementstion found.
-   * @param {Float32Array} triangle vector[0]
-   * @param {Float32Array} triangle vector[1]
-   * @param {Float32Array} triangle vector[2]
+   * @param {Float32Array} 2 component vector
+   * @param {Float32Array} 2 component vector
+   * @param {Float32Array} 2 component vector
    * @param {TriangleFunction} the triangle function.
    * @returns {void}
    */
   public raster (v0: Float32Array, v1: Float32Array, v2: Float32Array, func: PrimitiveRasterizationFunction): void {
-    if (this.visible(v0, v1, v2) === false) return
-
     // load registers.
     this.v0[0] = v0[0]
     this.v0[1] = v0[1]
@@ -310,12 +233,11 @@ export class TriangleRasterizer {
 /**
  * The rasterization function.
  * @param {Int16Array} the output address.
- * @param {number} the barycentric offset v0 -> v1
- * @param {number} the barycentric offset v0 -> v2
+ * @param {Float32Array} the vertex weights for this address.
  * @returns {void}
  */
 export interface RasterizationFunction {
-  (address: Int16Array, amount0: number, amount1: number): void
+  (address: Int16Array, weights: Float32Array): void
 }
 
 /**
@@ -326,77 +248,85 @@ export interface RasterizationFunction {
  * of the output pixel.
  */
 export class Rasterizer {
-  // internal registers.
-  private v0          = new Float32Array([0, 0])
-  private v1          = new Float32Array([0, 0])
-  private v2          = new Float32Array([0, 0])
-  private edge0       = new Float32Array([0, 0, 0])
-  private edge1       = new Float32Array([0, 0, 0])
-  private edge_len0   = new Float32Array([0])
-  private edge_len1   = new Float32Array([0])
-  private addr        = new Float32Array([0, 0])
-  private addr_offset = new Float32Array([0, 0])
-  private amount0     = new Float32Array([0])
-  private amount1     = new Float32Array([0])
 
-  private lineRasterizer     : LineRasterizer
-  private triangleRasterizer : TriangleRasterizer
-  private midpoint           : Float32Array  
-  
+  // triangle rasterizer.
+  private triangleRasterizer : TriangleRasterizer 
+
+  // internal vertex positions.
+  private v0     = new Float32Array([0, 0])
+  private v1     = new Float32Array([0, 0])
+  private v2     = new Float32Array([0, 0])
+
+  // barycentric vertex weights for a address.
+  private weights = new Float32Array([0, 0, 0])
+
+  // calculation registers.
+  private area      = new Float32Array([0])
+  private point     = new Float32Array([0, 0])
+  private edge0     = new Float32Array([0])
+  private edge1     = new Float32Array([0])
+  private edge2     = new Float32Array([0])
+
   /**
    * creates a new rasterizer.
    * @param {Viewport} the viewport.
    * @returns {Rasterizer}
    */
   constructor(private viewport: Viewport) {
-    this.lineRasterizer     = new LineRasterizer(this.viewport)
     this.triangleRasterizer = new TriangleRasterizer(this.viewport)
-    this.midpoint = new Float32Array([
-      viewport.width () / 2, 
-      viewport.height() / 2
-    ])
   }
   
   /**
-   * rasterizes the given triangle.
-   * @param {Float32Array} 4 component float vector0.
-   * @param {Float32Array} 4 component float vector1.
-   * @param {Float32Array} 4 component float vector2.
+   * calculates the edge / area of the given vectors. Vectors are assumed
+   * to be in counter clockwise order.
+   * @param {Float32Array} 2 element vector.
+   * @param {Float32Array} 2 element vector.
+   * @param {Float32Array} 2 element vector.
+   * @param {Float32Array} 1 output register
+   * @returns {void}
+   */
+  private edge(v0: Float32Array, v1: Float32Array, v2: Float32Array, out: Float32Array): void {
+    out[0] = (v2[0] - v0[0]) * (v1[1] - v0[1]) - (v2[1] - v0[1]) * (v1[0] - v0[0])
+  }
+
+  /**
+   * rasterizes the given triangle, providing the caller a callback to trace, along with weighted vertex offsets.
+   * @param {Float32Array} 2 component vector0.
+   * @param {Float32Array} 2 component vector1.
+   * @param {Float32Array} 2 component vector2.
    * @param {RasterizationFunction} the rasterization function.
    */
   public triangle(v0: Float32Array, v1: Float32Array, v2: Float32Array, func: RasterizationFunction): void {
-    // project vertices into clip space.
-    this.v0[0] = ((v0[0] / v0[3]) * this.viewport.width())  + this.midpoint[0]
-    this.v0[1] = ((v0[1] / v0[3]) * this.viewport.height()) + this.midpoint[1]
-    this.v1[0] = ((v1[0] / v1[3]) * this.viewport.width())  + this.midpoint[0]
-    this.v1[1] = ((v1[1] / v1[3]) * this.viewport.height()) + this.midpoint[1]
-    this.v2[0] = ((v2[0] / v2[3]) * this.viewport.width())  + this.midpoint[0]
-    this.v2[1] = ((v2[1] / v2[3]) * this.viewport.height()) + this.midpoint[1]
-    
-    // compute edges from 0 -> (1, 2)
-    sub(this.v1, this.v0, this.edge0)
-    sub(this.v2, this.v0, this.edge1)
-    len(this.edge0, this.edge_len0)
-    len(this.edge1, this.edge_len1)
-    if (this.edge_len0[0] === 0.0) return
-    if (this.edge_len1[0] === 0.0) return
-    normalize(this.edge0, this.edge0)
-    normalize(this.edge1, this.edge1)
-    // begin triangle rasterization.
+    // load registers
+    this.v0[0] = v0[0]
+    this.v0[1] = v0[1]
+    this.v1[0] = v1[0]
+    this.v1[1] = v1[1]
+    this.v2[0] = v2[0]
+    this.v2[1] = v2[1]
+
+    // calculate the area of this triangle.
+    this.edge(this.v0, this.v1, this.v2, this.area)
+
+    // begin rasterization.
     this.triangleRasterizer.raster(this.v0, this.v1, this.v2, address => {
-      // copy address into f32 buffer.
-      this.addr[0] = address[0]
-      this.addr[1] = address[1]
-      // compute the delta between v0 and address.
-      sub(this.addr, this.v0, this.addr_offset)
-      // compute barycentric argument. 
-      dot(this.addr_offset, this.edge0, this.amount0)
-      dot(this.addr_offset, this.edge1, this.amount1)
-      // normalize barycentric argument.
-      this.amount0[0] = this.amount0[0] / this.edge_len0[0]
-      this.amount1[0] = this.amount1[0] / this.edge_len1[0]
-      // dispatch.
-      func(address, this.amount0[0], this.amount1[0])
+
+      // load f32 point register.
+      this.point[0] = address[0]
+      this.point[1] = address[1]
+
+      // calculate edge values with respect to the point.
+      this.edge(this.v1, this.v2, this.point, this.edge0)
+      this.edge(this.v2, this.v0, this.point, this.edge1)
+      this.edge(this.v0, this.v1, this.point, this.edge2)
+
+      // calulate weights.
+      this.weights[0] = this.edge0[0] / this.area[0]
+      this.weights[1] = this.edge1[0] / this.area[0]
+      this.weights[2] = this.edge2[0] / this.area[0]
+
+      // dispatch
+      func(address, this.weights)
     })
   }
 }
