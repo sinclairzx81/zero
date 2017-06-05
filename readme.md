@@ -13,7 +13,7 @@ allows for interactive 3D renderings in the terminal. This software
 attempts to emulate parts of a modern graphics pipeline, going as far 
 to implement programmable vertex and fragment stages.
 
-zero-n was written as a small weekend project to see what was 
+zero was written as a small weekend project to see what was 
 reasonably possible to implement with JavaScript alone without
 adversely effecting performance, and to go through the motions of
 implementing a software GPU reference device from the ground up.
