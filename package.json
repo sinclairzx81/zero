@@ -1,0 +1,25 @@
+{
+  "name": "zero",
+  "version": "1.0.0",
+  "description": "3D graphics rendering pipeline, implemented in JavaScript. Run in a terminal window.",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^11.13.4",
+    "smoke-task": "^1.0.5",
+    "typescript": "^3.4.3"
+  },
+  "scripts": {
+    "demo": "smoke-task demo"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sinclairzx81/zero.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sinclairzx81/zero/issues"
+  },
+  "homepage": "https://github.com/sinclairzx81/zero#readme"
+}

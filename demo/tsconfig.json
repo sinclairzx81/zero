@@ -3,9 +3,9 @@
     "module"             : "commonjs",
     "target"             : "es5",
     "noImplicitUseStrict": true,
-    "outDir"             : "./bin"
+    "outDir"             : "./../bin"
   },
   "files" : [
-    "./demo/app.ts"
+    "./app.ts"
   ]
 }

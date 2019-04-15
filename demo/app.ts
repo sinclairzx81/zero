@@ -4,7 +4,7 @@ import {createCube} from "./cube"
 //---------------------------------------------
 // rendering size (modify for larger displays)
 //---------------------------------------------
-let width    = 60
+let width    = 90
 let height   = 40
 
 //-------------------------------------
@@ -82,7 +82,7 @@ setInterval(() => {
   //----------------------
   // draw
   //----------------------
-  device.clear(new Float32Array([0.01, 0, 0, 1]))
+  device.clear(new Float32Array([0.1, 0, 0, 1]))
   positions.forEach(offset => {
     device.uniforms.model = zero.Matrix.mul(offset, matrix)
     for (let i = 0; i < cube.indices.length; i += 3) {

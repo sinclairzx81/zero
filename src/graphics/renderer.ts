@@ -214,7 +214,7 @@ export class Device {
     this.rasterizer.triangle(this.clipspace.v0, this.clipspace.v1, this.clipspace.v2, (address, weights) => {
 
       // load pixel pointer.
-      let pointer = this.pixelbuffer.pointer(address)
+      let pointer = this.pixelbuffer.pointer((address as any) as Uint16Array) // coersion here (fix)
 
       // interpolate the position.
       this.interpolate(vs0.position, vs1.position, vs2.position, weights, this.varying.position)

@@ -36,9 +36,8 @@ these things to build.
 (assumes node 6.x + npm is already installed)
 
 ```
-npm install typescript@2.0.2
-tsc -p tsconfig.json
-node bin/demo/app
+npm install
+npm run demo
 ```
 
 

@@ -26,8 +26,6 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-/// <reference path="../@types/node/node.d.ts" />
-
 import {PixelBuffer} from "./pixelbuffer"
 
 export interface Display {
@@ -98,7 +96,10 @@ export class TerminalDisplay implements Display {
         let color  = pixel[0] // only red
         if(color <= 0) color = 0
         if(color >= 1) color = 1
-        let sample = this.ramp[Math.floor((1.0 - pixel[0]) * (this.ramp.length - 1))]
+        let invert = (1.0 - pixel[0])
+        let offset = Math.floor(invert * (this.ramp.length))
+        let index = Math.min(offset, this.ramp.length - 1)
+        let sample = this.ramp[index]
         this.buffer[idx] = sample
         idx += 1
       }
