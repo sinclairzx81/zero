@@ -7,9 +7,10 @@ required.</p>
 
 <img src='https://github.com/sinclairzx81/zero/raw/master/terminal.gif'></img>
 
+[![NPM package](https://badge.fury.io/js/zero-demo.svg)](https://www.npmjs.com/package/zero-demo) 
+
 </div>
 
-[![NPM package](https://badge.fury.io/js/zero-demo.svg)](https://www.npmjs.com/package/zero-demo) 
 
 ```bash
 # install
