@@ -2,7 +2,7 @@
 
 <h1>Zero</h1>
 
-<p>A graphics pipeline implemented entirely in JavaScript and rendered to the terminal. No GPU 
+<p>A graphics pipeline implemented in JavaScript and rendered to the terminal. No GPU 
 required.</p>
 
 <img src='https://github.com/sinclairzx81/zero/raw/master/terminal.gif'></img>
