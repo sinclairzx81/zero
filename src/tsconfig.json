@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "moduleResolution": "node",
+        "target": "esnext",
+        "strict": true,
+        "declaration": false,
+        "removeComments": true
+    }, "files": [
+        "./index.ts"
+    ]
+}

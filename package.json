@@ -1,25 +1,30 @@
 {
-  "name": "zero",
-  "version": "1.0.0",
-  "description": "3D graphics rendering pipeline, implemented in JavaScript. Run in a terminal window.",
+  "name": "zero-demo",
+  "version": "0.8.0",
+  "description": "A graphics demo that runs inside the terminal.",
   "main": "index.js",
-  "dependencies": {},
-  "devDependencies": {
-    "@types/node": "^11.13.4",
-    "smoke-task": "^1.0.5",
-    "typescript": "^3.4.3"
-  },
-  "scripts": {
-    "demo": "smoke-task demo"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/sinclairzx81/zero.git"
-  },
-  "author": "",
+  "author": "sinclairzx81",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/sinclairzx81/zero/issues"
+  "scripts": {
+    "clean": "smoke-task clean",
+    "build": "smoke-task build",
+    "watch": "smoke-task watch",
+    "pack": "smoke-task pack",
+    "install_cli": "smoke-task install_cli"
   },
-  "homepage": "https://github.com/sinclairzx81/zero#readme"
+  "bin": {
+    "zero-demo": "./index.js"
+  },
+  "preferGlobal": true,
+  "devDependencies": {
+    "@types/jpeg-js": "^0.3.7",
+    "@types/node": "^12.7.12",
+    "smoke-run": "^1.1.0",
+    "smoke-task": "^1.1.2",
+    "typescript": "^3.6.4",
+    "typescript-bundle": "^1.0.16"
+  },
+  "dependencies": {
+    "jpeg-js": "^0.3.6"
+  }
 }
