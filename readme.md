@@ -23,7 +23,7 @@ $ zero-demo
 
 ### Overview
 
-Zero is a small graphics app that uses JavaScript to replicate the functionality of a GPU and uses the terminal to display its rendered output via nodejs' stdout. Zero was written for fun as well as to see how far one could reasonably push JavaScript performance. The terminal rendering has been tested on Windows, Linux as well as within the integrated vscode terminal. It should work fine on OSX.
+Zero is a small graphics app that uses JavaScript to replicate the functionality of a GPU and uses the terminal to display its rendered output via nodejs' stdout. Zero was written for fun as well as to see how far one could reasonably push JavaScript performance. Rendering has been tested on Windows, OSX and Linux terminals.
 
 This project and associative materials are offered as is to anyone who may find them of use.
 
