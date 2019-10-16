@@ -1,10 +1,14 @@
 {
   "name": "zero-demo",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "A graphics demo that runs inside the terminal.",
   "main": "index.js",
   "author": "sinclairzx81",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sinclairzx81/zero.git"
+  },
   "scripts": {
     "clean": "smoke-task clean",
     "build": "smoke-task build",

@@ -1,8 +1,15 @@
 <div align='center'>
-    <h1>Zero</h1>
-    <p>A graphics pipeline implemented entirely in JavaScript and rendered to the terminal. No GPU required.</p>
-    <img src='https://github.com/sinclairzx81/zero/raw/master/terminal.gif'></img>
+
+<h1>Zero</h1>
+
+<p>A graphics pipeline implemented entirely in JavaScript and rendered to the terminal. No GPU 
+required.</p>
+
+<img src='https://github.com/sinclairzx81/zero/raw/master/terminal.gif'></img>
+
 </div>
+
+[![NPM package](https://badge.fury.io/js/zero-demo.svg)](https://www.npmjs.com/package/zero-demo) 
 
 ```bash
 # install
@@ -11,6 +18,7 @@ $ npm install zero-demo -g
 # run it
 $ zero-demo
 ```
+
 
 ### Overview
 
