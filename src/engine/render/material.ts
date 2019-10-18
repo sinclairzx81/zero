@@ -31,7 +31,7 @@ import { VertexProgram }      from '../raster/index'
 import { FragmentProgram }    from '../raster/index'
 import { Vertex }             from '../raster/index'
 import { Matrix, Vector4 }    from '../math/index'
-import { Texture, ImageData } from './texture'
+import { Texture }            from './texture'
 
 // -----------------------------------------------------------
 //

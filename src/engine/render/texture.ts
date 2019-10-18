@@ -29,12 +29,6 @@ THE SOFTWARE.
 import { Vector4 }      from '../math/index'
 import { RenderTarget } from '../raster/target'
 
-export interface ImageData {
-    width:  number
-    height: number
-    data:   Uint8Array
-}
-
 export class Texture implements RenderTarget {
     private data: Float32Array
 
