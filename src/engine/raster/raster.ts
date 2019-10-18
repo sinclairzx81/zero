@@ -38,37 +38,45 @@ export class Raster {
     private static position_0          = Vector4.zero()
     private static position_1          = Vector4.zero()
     private static position_2          = Vector4.zero()
-    private static corrected_varying_0 = Vertex.create()
-    private static corrected_varying_1 = Vertex.create()
-    private static corrected_varying_2 = Vertex.create()
-    private static varying_0           = Vertex.create()
-    private static varying_1           = Vertex.create()
-    private static varying_2           = Vertex.create()
     private static clippos_0           = Vector2.zero()
     private static clippos_1           = Vector2.zero()
     private static clippos_2           = Vector2.zero()
-    
-    /** Renders a triangle with the given arguments */
-    public static triangle<TUniform>(vertexProgram: VertexProgram<TUniform>, fragmentProgram: FragmentProgram<TUniform>, depth: DepthBuffer, target: RenderTarget, uniform: TUniform, vertex_0: Vertex, vertex_1: Vertex, vertex_2: Vertex) {
+    private static varying_0           = Vertex.create()
+    private static varying_1           = Vertex.create()
+    private static varying_2           = Vertex.create()
+    private static corrected_varying_0 = Vertex.create()
+    private static corrected_varying_1 = Vertex.create()
+    private static corrected_varying_2 = Vertex.create()
 
-        // compute half width and height
+    /** Renders a triangle with the given arguments */
+    public static triangle<TUniform>(
+        vertexProgram:   VertexProgram<TUniform>,
+        fragmentProgram: FragmentProgram<TUniform>, 
+        depth:           DepthBuffer, 
+        target:          RenderTarget, 
+        uniform:         TUniform, 
+        vertex_0:        Vertex, 
+        vertex_1:        Vertex, 
+        vertex_2:        Vertex
+    ): void {
+        // Compute half width and height
         const width       = target.width
         const height      = target.height
         const half_width  = width * 0.5
         const half_height = height * 0.5
 
-        // execute vertex shader.
+        // Execute vertex shader.
         vertexProgram.main(uniform, vertex_0, Raster.varying_0, Raster.position_0)
         vertexProgram.main(uniform, vertex_1, Raster.varying_1, Raster.position_1)
         vertexProgram.main(uniform, vertex_2, Raster.varying_2, Raster.position_2)
 
-        // prevent z less than 0.0 errors, discard the triangle.
+        // Prevent z less than 0.0 errors, discard the triangle.
         if (Raster.position_0.v[2] < 0.0 || Raster.position_1.v[2] < 0.0 || Raster.position_2.v[2] < 0.0) {
-            // todo: we should consider clipping the position here.
+            // todo: we should consider clipping the triangle here.
             return
         }
 
-        // calculate positions in clip space.
+        // Calculate positions in clip space.
         Raster.clippos_0.v[0] = (( Raster.position_0.v[0] / Raster.position_0.v[3]) * width)  + half_width
         Raster.clippos_0.v[1] = ((-Raster.position_0.v[1] / Raster.position_0.v[3]) * height) + half_height
         Raster.clippos_1.v[0] = (( Raster.position_1.v[0] / Raster.position_1.v[3]) * width)  + half_width
@@ -76,12 +84,12 @@ export class Raster {
         Raster.clippos_2.v[0] = (( Raster.position_2.v[0] / Raster.position_2.v[3]) * width)  + half_width
         Raster.clippos_2.v[1] = ((-Raster.position_2.v[1] / Raster.position_2.v[3]) * height) + half_height
 
-        // correct varying with respect to w
+        // Correct varying with respect to w
         Vertex.correct(Raster.varying_0, Raster.position_0.v[3], Raster.corrected_varying_0)
         Vertex.correct(Raster.varying_1, Raster.position_1.v[3], Raster.corrected_varying_1)
         Vertex.correct(Raster.varying_2, Raster.position_2.v[3], Raster.corrected_varying_2)
 
-        // backface cull and render fragments
+        // Backface cull and render fragments
         if (Raster.edge(Raster.clippos_0, Raster.clippos_1, Raster.clippos_2) >= 0.0) {
             Raster.draw_triangle<TUniform>(
                 fragmentProgram,
@@ -100,6 +108,16 @@ export class Raster {
             )
         }
     }
+    
+    private static calculate_x_scan_range(y: number, ordered_0: Vector2, ordered_1: Vector2, ordered_2: Vector2, ordered_3: Vector2): [number, number] {
+        const gradient_0 = (ordered_0.v[1] !== ordered_1.v[1]) ? (y - ordered_0.v[1]) / (ordered_1.v[1] - ordered_0.v[1]) : 1.0
+        const gradient_1 = (ordered_2.v[1] !== ordered_3.v[1]) ? (y - ordered_2.v[1]) / (ordered_3.v[1] - ordered_2.v[1]) : 1.0
+        const min_x = ordered_0.v[0] + (ordered_1.v[0] - ordered_0.v[0]) * Raster.clamp(gradient_0, 0.0, 1.0)
+        const max_x = ordered_2.v[0] + (ordered_3.v[0] - ordered_2.v[0]) * Raster.clamp(gradient_1, 0.0, 1.0)
+        return [min_x | 0, max_x | 0]
+    }
+
+    // draw_triangle: registers
     private static ordered_0 = Vector2.zero()
     private static ordered_1 = Vector2.zero()
     private static ordered_2 = Vector2.zero()
@@ -118,7 +136,7 @@ export class Raster {
         corrected_z_1: number,
         corrected_z_2: number,
     ) {
-        // clone clippos for sorting.
+        // Clone clippos for sorting.
         Raster.ordered_0.v[0] = clippos_0.v[0]
         Raster.ordered_0.v[1] = clippos_0.v[1]
         Raster.ordered_1.v[0] = clippos_1.v[0]
@@ -126,7 +144,7 @@ export class Raster {
         Raster.ordered_2.v[0] = clippos_2.v[0]
         Raster.ordered_2.v[1] = clippos_2.v[1]
         
-        // sort ordered y-descending.
+        // Sort ordered y-descending.
         if (Raster.ordered_0.v[1] > Raster.ordered_1.v[1]) {
             Raster.swap(Raster.ordered_0, Raster.ordered_1);
         }
@@ -137,7 +155,7 @@ export class Raster {
             Raster.swap(Raster.ordered_0, Raster.ordered_1);
         }
         
-        // draw scanlines (may need further optimization)
+        // Draw scanlines (may need further optimization)
         for (let y = (Raster.ordered_0.v[1] | 0); y <= (Raster.ordered_2.v[1] | 0); y++) {
             if (y < Raster.ordered_1.v[1]) {
                 const [min_x, max_x] = Raster.calculate_x_scan_range(
@@ -222,7 +240,6 @@ export class Raster {
                     y,
                 )
             } else {
-                // ok
                 const [min_x, max_x] = Raster.calculate_x_scan_range(
                     y, 
                     Raster.ordered_1,
@@ -251,16 +268,8 @@ export class Raster {
             }
         }
     }
-
     
-    private static calculate_x_scan_range(y: number, ordered_0: Vector2, ordered_1: Vector2, ordered_2: Vector2, ordered_3: Vector2): [number, number] {
-        const gradient_0 = (ordered_0.v[1] !== ordered_1.v[1]) ? (y - ordered_0.v[1]) / (ordered_1.v[1] - ordered_0.v[1]) : 1.0
-        const gradient_1 = (ordered_2.v[1] !== ordered_3.v[1]) ? (y - ordered_2.v[1]) / (ordered_3.v[1] - ordered_2.v[1]) : 1.0
-        const min_x = ordered_0.v[0] + (ordered_1.v[0] - ordered_0.v[0]) * Raster.clamp(gradient_0, 0.0, 1.0)
-        const max_x = ordered_2.v[0] + (ordered_3.v[0] - ordered_2.v[0]) * Raster.clamp(gradient_1, 0.0, 1.0)
-        return [min_x | 0, max_x | 0]
-    }
-
+    // draw_line: registers
     private static fragment_varying = Vertex.create()
     private static fragment_coord   = Vector2.zero()
     private static fragment_color   = Vector4.zero()
@@ -282,7 +291,7 @@ export class Raster {
         max_x:         number,
         y:             number,
     ) {
-        // exit if outside viewport height.
+        // Exit if outside viewport height.
         if (y < 0 || y >= target.height) {
             return;
         }
@@ -290,30 +299,31 @@ export class Raster {
         min_x = Math.max(min_x, 0);
         max_x = Math.min(max_x, target.width - 1);
         
-        // calculate edge value
+        // Calculate edge value
         const edge = Raster.edge(clippos_0, clippos_1, clippos_2);
 
         for (let x = min_x; x < max_x; x++) {
-            // calculate weights
+            // Store X, Y in fragment coord.
             Raster.fragment_coord.v[0] = x
             Raster.fragment_coord.v[1] = y
 
+            // Calulate weights across triangle clippos.
             const weight_0 = Raster.edge(clippos_2, clippos_1, Raster.fragment_coord) / edge
             const weight_1 = Raster.edge(clippos_0, clippos_2, Raster.fragment_coord) / edge
             const weight_2 = Raster.edge(clippos_1, clippos_0, Raster.fragment_coord) / edge
 
-            // calculate depth of fragment.
+            // Calculate depth of fragment.
             const calculated_depth = 
                   (weight_0 * corrected_z_0)
                 + (weight_1 * corrected_z_1)
                 + (weight_2 * corrected_z_2);
 
-            // check depth and discard, interpolate and render.
+            // Check depth and discard. Otherwise interpolate and render.
             if (calculated_depth <= depth.get(x | 0, y | 0)) {
-                // set the depth component
+                // Set the depth component
                 depth.set(x, y, calculated_depth)
                 
-                // interpolate the varying
+                // Interpolate the varying
                 Vertex.interpolate(
                     varying_0,
                     varying_1,
@@ -325,14 +335,14 @@ export class Raster {
                     Raster.fragment_varying
                 )
                 
-                // execute fragment shader.
+                // Execute fragment shader.
                 fragment.main(
                     uniform, 
                     Raster.fragment_varying, 
                     Raster.fragment_color
                 )
                 
-                // set color.
+                // Set color.
                 target.set(x, y, Raster.fragment_color)
             }
         }

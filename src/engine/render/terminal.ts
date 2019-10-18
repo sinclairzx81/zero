@@ -31,14 +31,14 @@ import { Vector4 } from '../math';
 
 export class Terminal {
     private ramp = ' .:;+=xX$#&'.split('').map(n => n.charCodeAt(0))
-    private data: Uint8Array
+    private buffer: Uint8Array
     
     constructor(private width: number, private height: number) {
-        this.data = new Uint8Array((this.width + 1) * this.height)
+        this.buffer = new Uint8Array((this.width + 1) * this.height)
         for (let y = 0; y < this.height; y++) {
             let x = this.width - 1;
             let i = x + (y * this.width)
-            this.data[i] = 0x0a
+            this.buffer[i] = 0x0a
         }
     }
 
@@ -49,27 +49,29 @@ export class Terminal {
 
     /** Presents this texture to the terminal. */
     public present(texture: Texture) {
-        // mutable color
+        // Create output color variable to write to. Usually
+        // faster than creating new JS objects per pixel.
         const color = Vector4.zero()
 
-        // maps color buffer into ascii gradient buffer.
+        // Maps the texture buffer into the gradient buffer.
         for (let y = 0; y < this.height; y++) {
             for (let x = 0; x < (this.width - 1); x++) {
                 const offset = this.offset(x, y)
-                // review this. the 'terminal' may be larger than
-                // the terminal. should compute min|max here.
+                // The 'terminal' may be larger than the texture 
+                // being presented. If larger set terminal out
+                // as black.
                 if (x >= texture.width && y >= texture.height) {
-                    this.data[offset] = this.ramp[0]
+                    this.buffer[offset] = this.ramp[0]
                 } else {
                     texture.fast_get(x, y, color)                    
                     const index = this.compute_color_ramp_index(color)
-                    this.data[offset] = this.ramp[index]
+                    this.buffer[offset] = this.ramp[index]
                 }
             }
         }
 
-        // push buffer and reset back to position.
-        process.stdout.write(this.data)
+        // Blit buffer and reset back to position.
+        process.stdout.write(this.buffer)
         process.stdout.write(`\x1b[${this.width}D`)
         process.stdout.write(`\x1b[${this.height}A`)
 
