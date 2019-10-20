@@ -27,7 +27,7 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 export { Camera }                    from './camera'
-export { Geometry, BoxGeometry }     from './geometry'
+export { Geometry }                  from './geometry'
 export { Material, TextureMaterial } from './material'
 export { Mesh }                      from './mesh'
 export { Object3D }                  from './object'

@@ -74,5 +74,5 @@ setInterval(() => {
     );
     renderer.clear(Vector4.create(1, 1, 1, 0))
     renderer.render(camera, scene)
-}, 1)
+}, 1000 / 60)
 

@@ -26,8 +26,8 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Texture, Scene, Animation, Geometry, TextureMaterial, Mesh } from './engine/index'
-import { Vector4 }                   from './engine'
+import { Texture, Scene, Animation, Geometry, TextureMaterial, Mesh, Vertex } from './engine'
+import { Vector4, Vector3, Vector2 } from './engine'
 import { decode }                    from 'jpeg-js'
 import { readFileSync, readdirSync } from 'fs'
 import { join, extname }             from 'path'
@@ -50,25 +50,81 @@ export function load_texture(filename: string): Texture {
     return buffer
 }
 
-// Loads .obj files and corrosponding .jpg textures. Will ignore any .obj
-// that does not have a corrosponding .jpg.
-export function load_scene(directory: string): Scene {
-    const contents = readdirSync(directory)
-    const models   = contents.filter(file => extname(file) === '.obj')
-    const scene    = new Scene()
-    for(const model_name of models) {
-        const texture_name = model_name.slice(0, model_name.length - 4) + '.jpg'
-        if(contents.includes(texture_name)) {
-            console.log(' loading ... ', model_name)
-            const geometry   = Geometry.wavefront(join(directory, model_name))
-            console.log(' loading ... ', texture_name)
-            const material   = new TextureMaterial(load_texture(join(directory, texture_name)))
-            const mesh       = new Mesh(geometry, material)
-            scene.add(mesh)
+// Loads wavefront (.obj) files. Does not support materials or
+// multiple objects with the file. 
+export function load_geometry(filepath: string): Geometry {
+    // geometry accumulators
+    const acc_v:  Vector4[] = []
+    const acc_vn: Vector3[] = []
+    const acc_vt: Vector2[] = []
+
+    // geometry data - built from accumulators.
+    const positions: Vector4[] = []
+    const normals:   Vector3[] = []
+    const uvs:       Vector2[] = []
+    const indices:   number[]  = []
+
+    const content = readFileSync(filepath, 'utf8')
+    for (const line of content.split('\n')) {
+        const parts = line.split(" ").map(p => p.trim())
+        if (parts.length > 0) {
+            switch (parts[0]) {
+                case "v": {
+                    const x = parseFloat(parts[1])
+                    const y = parseFloat(parts[2])
+                    const z = parseFloat(parts[3])
+                    acc_v.push(Vector4.create(x, y, z, 1.0));
+                    break;
+                }
+                case "vn": {
+                    const x = parseFloat(parts[1])
+                    const y = parseFloat(parts[2])
+                    const z = parseFloat(parts[3])
+                    acc_vn.push(Vector3.create(x, y, z));
+                    break
+                }
+                case "vt": {
+                    const x = parseFloat(parts[1])
+                    const y = parseFloat(parts[2])
+                    acc_vt.push(Vector2.create(x, y));
+                    break
+                }
+                case "f": {
+                    for (let i = 1; i <= 3; i++) {
+                        const face = parts[i].split("/");
+                        const i_v  = parseInt(face[0]) - 1;
+                        const i_vt =  parseInt(face[1]) - 1;
+                        const i_vn =  parseInt(face[2]) - 1;
+                        if (i_v > acc_v.length - 1) {
+                            throw Error(`Invalid position index for face: ${parts[0]}`)
+                        }
+                        if (i_vt > acc_vt.length - 1) {
+                            throw Error(`Invalid texcoord index for face: ${parts[0]}`)
+                        }
+                        if (i_vn > acc_vn.length - 1) {
+                            throw Error(`Invalid normal index for face: ${parts[0]}`)
+                        }
+                        positions.push(acc_v[i_v]);
+                        normals.push(acc_vn[i_vn]);
+                        uvs.push(acc_vt[i_vt]);
+                        indices.push(indices.length);
+                    }
+                }
+                default: /* ignore */ break;
+            }
         }
     }
-    console.log('')
-    return scene;
+    
+    // push vertices array.
+    const vertices: Vertex[] = []
+    for (let i = 0; i < positions.length; i++) {
+        vertices.push(new Vertex(
+            positions[i],
+            normals[i],
+            uvs[i],
+        ))
+    }
+    return new Geometry(vertices, indices)
 }
 
 // see blender asset script for how this is exported.
@@ -94,4 +150,25 @@ export function load_animation(directory: string): Animation {
         })
     }
     return animation
+}
+
+// Loads .obj files and corrosponding .jpg textures. Will ignore any .obj
+// that does not have a corrosponding .jpg.
+export function load_scene(directory: string): Scene {
+    const contents = readdirSync(directory)
+    const models   = contents.filter(file => extname(file) === '.obj')
+    const scene    = new Scene()
+    for(const model_name of models) {
+        const texture_name = model_name.slice(0, model_name.length - 4) + '.jpg'
+        if(contents.includes(texture_name)) {
+            console.log(' loading ... ', model_name)
+            const geometry = load_geometry(join(directory, model_name))
+            console.log(' loading ... ', texture_name)
+            const material = new TextureMaterial(load_texture(join(directory, texture_name)))
+            const mesh     = new Mesh(geometry, material)
+            scene.add(mesh)
+        }
+    }
+    console.log('')
+    return scene;
 }

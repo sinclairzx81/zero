@@ -59,7 +59,6 @@ export {
 
 export {
     Camera,
-    BoxGeometry,
     Geometry,
     Material,
     Mesh,
