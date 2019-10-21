@@ -382,8 +382,8 @@ export class Vector2 {
   /** Multiplies the given two vectors.  */
   public static mul(v0: Vector2, v1: Vector2): Vector2 {
     return new Vector2(
-      v0.v[0] - v1.v[0],
-      v0.v[1] - v1.v[1]
+      v0.v[0] * v1.v[0],
+      v0.v[1] * v1.v[1]
     )
   }
 

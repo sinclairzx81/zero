@@ -437,10 +437,10 @@ export class Vector4 {
   /** Multiplies the given two vectors. */
   public static mul(v0: Vector4, v1: Vector4): Vector4 {
     return new Vector4(
-      v0.v[0] - v1.v[0],
-      v0.v[1] - v1.v[1],
-      v0.v[2] - v1.v[2],
-      v0.v[3] - v1.v[3]
+      v0.v[0] * v1.v[0],
+      v0.v[1] * v1.v[1],
+      v0.v[2] * v1.v[2],
+      v0.v[3] * v1.v[3]
     )
   }
 
