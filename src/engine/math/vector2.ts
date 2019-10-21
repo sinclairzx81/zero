@@ -66,6 +66,7 @@ export class Vector2 {
   public get x(): number {
     return this.v[0];
   }
+
   public get y(): number {
     return this.v[1]
   }
@@ -73,6 +74,7 @@ export class Vector2 {
   public set x(value: number) {
     this.v[0] = value;
   }
+
   public set y(value: number) {
     this.v[1] = value
   }
@@ -182,6 +184,7 @@ export class Vector2 {
       (v0.v[1] * v0.v[1])
     )
   }
+
   /** Returns the square length of the given vector. */
   public static getLengthSq(v0: Vector2): number {
     return (
@@ -192,15 +195,15 @@ export class Vector2 {
 
   /** Returns the distance between the left and right vectors. */
   public static distance(v0: Vector2, v1: Vector2): number {
-    let x = v0.v[0] - v1.v[0]
-    let y = v0.v[1] - v1.v[1]
+    const x = v0.v[0] - v1.v[0]
+    const y = v0.v[1] - v1.v[1]
     return Math.sqrt((x * x) + (y * y))
   }
 
   /** Returns the squared distance between the left and right vectors. */
   public static distanceSq(v0: Vector2, v1: Vector2): number {
-    let x = v0.v[0] - v1.v[0]
-    let y = v0.v[1] - v1.v[1]
+    const x = v0.v[0] - v1.v[0]
+    const y = v0.v[1] - v1.v[1]
     return ((x * x) + (y * y))
   }
 
@@ -214,7 +217,7 @@ export class Vector2 {
 
   /** Returns a normalized vector from the given vector. */
   public static normalize(v0: Vector2): Vector2 {
-    let len = 1.0 / Math.sqrt(
+    const len = 1.0 / Math.sqrt(
       (v0.v[0] * v0.v[0]) +
       (v0.v[1] * v0.v[1])
     )
@@ -226,7 +229,7 @@ export class Vector2 {
 
   /** Returns the reflected vector about the given vector and normal. */
   public static reflect(v0: Vector2, n0: Vector2): Vector2 {
-    let dot = (
+    const dot = (
       (v0.v[0] * n0.v[0]) +
       (v0.v[1] * n0.v[1])
     )
@@ -299,8 +302,8 @@ export class Vector2 {
 
   /** Returns the catmull rom interpolation between the given vectors and amount. */
   public static catmullrom(v0: Vector2, v1: Vector2, v2: Vector2, v3: Vector2, amount: number): Vector2 {
-    let n0 = amount * amount
-    let n1 = amount * n0
+    const n0 = amount * amount
+    const n1 = amount * n0
     return new Vector2(
       0.5 * ((((2.0 * v1.v[0])
         + ((-v0.v[0] + v2.v[0]) * amount))
@@ -319,12 +322,12 @@ export class Vector2 {
 
   /** Returns the hermite interpolation between the given vectors and amount. */
   public static hermite(v0: Vector2, t0: Vector2, v1: Vector2, t1: Vector2, amount: number): Vector2 {
-    let n0 = amount * amount
-    let n1 = amount * n0
-    let n2 = ((2.0 * n1) - (3.0 * n0)) + 1.0
-    let n3 = (-2.0 * n1) + (3.0 * n0)
-    let n4 = (n1 - (2.0 * n0)) + amount
-    let n5 = n1 - n0
+    const n0 = amount * amount
+    const n1 = amount * n0
+    const n2 = ((2.0 * n1) - (3.0 * n0)) + 1.0
+    const n3 = (-2.0 * n1) + (3.0 * n0)
+    const n4 = (n1 - (2.0 * n0)) + amount
+    const n5 = n1 - n0
     return new Vector2(
       (((v0.v[0] * n2) + (v1.v[0] * n3)) + (t0.v[0] * n4)) + (t1.v[0] * n5),
       (((v0.v[1] * n2) + (v1.v[1] * n3)) + (t0.v[1] * n4)) + (t1.v[1] * n5)
@@ -349,14 +352,14 @@ export class Vector2 {
 
   /** Returns the transformed vector from the given normal and quaternion. */
   public static transformQuaternion(v0: Vector2, q0: Quaternion): Vector2 {
-    let n0 = q0.v[0] + q0.v[0]
-    let n1 = q0.v[1] + q0.v[1]
-    let n2 = q0.v[2] + q0.v[2]
-    let n3 = q0.v[3] * n2
-    let n4 = q0.v[0] * n0
-    let n5 = q0.v[0] * n1
-    let n6 = q0.v[1] * n1
-    let n7 = q0.v[2] * n2
+    const n0 = q0.v[0] + q0.v[0]
+    const n1 = q0.v[1] + q0.v[1]
+    const n2 = q0.v[2] + q0.v[2]
+    const n3 = q0.v[3] * n2
+    const n4 = q0.v[0] * n0
+    const n5 = q0.v[0] * n1
+    const n6 = q0.v[1] * n1
+    const n7 = q0.v[2] * n2
     return new Vector2(
       (v0.v[0] * ((1.0 - n6) - n7)) + (v0.v[1] * (n5 - n3)),
       (v0.v[0] * (n5 + n3)) + (v0.v[1] * ((1.0 - n4) - n7))

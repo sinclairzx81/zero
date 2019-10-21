@@ -68,9 +68,11 @@ export class Vector3 {
   public get x(): number {
     return this.v[0];
   }
+
   public get y(): number {
     return this.v[1]
   }
+
   public get z(): number {
     return this.v[2]
   }
@@ -78,9 +80,11 @@ export class Vector3 {
   public set x(value: number) {
     this.v[0] = value;
   }
+
   public set y(value: number) {
     this.v[1] = value
   }
+
   public set z(value: number) {
     this.v[2] = value
   }
