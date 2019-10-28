@@ -49,7 +49,8 @@ const scene         = load_scene(join(__dirname, './scene'))
 const renderer      = new Renderer({ safeWidth: 380, safeHeight: 140 })
 const camera        = new Camera()
 
-setInterval(() => {
+function loop () {
+
     process.title = `zero-demo: ${renderer.width()} x ${renderer.height()} @ ${renderer.fps()} fps - Sinclair: October 2019`
 
     const aspect  = renderer.width() / (renderer.height() * 2.0)
@@ -74,5 +75,8 @@ setInterval(() => {
     );
     renderer.clear(Vector4.create(1, 1, 1, 0))
     renderer.render(camera, scene)
-}, 1000 / 60)
 
+    setTimeout(() => loop())
+}
+
+loop()

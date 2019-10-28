@@ -1,6 +1,6 @@
 {
   "name": "zero-demo",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "A graphics demo that runs inside the terminal.",
   "main": "index.js",
   "author": "sinclairzx81",

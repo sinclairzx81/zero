@@ -13,7 +13,8 @@ required.</p>
 
 
 ```bash
-# run demo
+# start the demo with npx
+
 $ npx zero-demo
 ```
 
