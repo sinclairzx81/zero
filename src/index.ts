@@ -76,7 +76,7 @@ function loop () {
     renderer.clear(Vector4.create(1, 1, 1, 0))
     renderer.render(camera, scene)
 
-    setTimeout(() => loop())
+    setImmediate(loop)
 }
 
 loop()
