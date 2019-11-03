@@ -26,85 +26,22 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Matrix, Vector4 }  from '../math/index'
-
-import { DepthBuffer } from '../raster/index'
-import { Raster }      from '../raster/index'
-import { Texture }     from './texture'
-import { Terminal }    from './terminal'
-import { Camera }      from './camera'
-import { Object3D }    from './object'
-import { Scene }       from './scene'
-import { Mesh }        from './mesh'
-
-export class FramesPerSecond {
-    private samples: number[]
-    private index:   number
-    private last:    number
-    constructor(samples: number = 32) {
-        this.samples = Array.from({ length: samples }, () => 0)
-        this.index   = 0
-        this.last    = Date.now()
-    }
-    public sample() {
-        const next  = Date.now()
-        const delta = next - this.last
-        this.samples[this.index] = (1000 / delta)
-        this.index  = (this.index + 1) % this.samples.length
-        this.last   = next
-    }
-    public get(): number {
-        const total = this.samples.reduce((acc, c) => acc + c, 0)
-        return (total / this.samples.length) | 0
-    }
-}
-
-export interface RendererOptions {
-    safeWidth?:  number,
-    safeHeight?: number
-}
+import { Matrix, Vector4 } from '../math/index'
+import { Terminal }        from '../terminal/index'
+import { DepthBuffer }     from '../raster/index'
+import { Raster }          from '../raster/index'
+import { Texture }         from './texture'
+import { Camera }          from './camera'
+import { Object3D }        from './object'
+import { Scene }           from './scene'
+import { Mesh }            from './mesh'
 
 export class Renderer {
-    private frames_per_second: FramesPerSecond
-    private terminal!:         Terminal
-    private depthBuffer!:      DepthBuffer
-    private colorBuffer!:      Texture
+    private depth_buffer!: DepthBuffer
+    private color_buffer!: Texture
 
-    constructor(private options: RendererOptions) {
-        this.frames_per_second  = new FramesPerSecond()
-        this.options.safeWidth  = this.options.safeWidth  || 80
-        this.options.safeHeight = this.options.safeHeight || 40
+    constructor(private terminal: Terminal) {
         this.setup_buffers()
-        this.setup_resize()
-    }
-
-    /** Gets the fps for this renderer. */
-    public fps(): number {
-        return this.frames_per_second.get()
-    }
-
-    /** Gets the width of this renderer. */
-    public width(): number {
-        return this.colorBuffer.width
-    }
-    
-    /** Gets the height of this renderer. */
-    public height(): number {
-        return this.colorBuffer.height
-    }
-
-    private setup_resize() {
-        if(process.stdout.isTTY) {
-            process.stdout.on('resize', () => this.setup_buffers())
-        }
-    }
-
-    private setup_buffers() {
-        const width      = process.stdout.isTTY ? process.stdout.columns : this.options.safeWidth!
-        const height     = process.stdout.isTTY ? (process.stdout.rows - 2) : this.options.safeHeight!
-        this.terminal    = new Terminal(width, height)
-        this.depthBuffer = new DepthBuffer(width, height)
-        this.colorBuffer = new Texture(width, height)
     }
 
     private render_object(camera: Camera, object3D: Object3D, transform: Matrix) {
@@ -143,8 +80,8 @@ export class Renderer {
             Raster.triangle(
                 material.vertexProgram,
                 material.fragmentProgram,
-                this.depthBuffer!,
-                this.colorBuffer!,
+                this.depth_buffer!,
+                this.color_buffer!,
                 uniform,
                 vertex_0,
                 vertex_1,
@@ -154,13 +91,29 @@ export class Renderer {
     }
 
     public clear(color: Vector4) {
-        this.colorBuffer.clear(color)
-        this.depthBuffer.clear()
+        this.assert_buffers()
+        this.color_buffer.clear(color)
+        this.depth_buffer.clear()
     }
 
     public render(camera: Camera, scene: Scene) {
+        this.assert_buffers()
         this.render_scene(camera, scene, scene.matrix)
-        this.terminal!.present(this.colorBuffer)
-        this.frames_per_second.sample()
+        this.terminal.present(this.color_buffer)
+    }
+
+    private size = { width: 0, height: 0 }
+
+    private setup_buffers() {
+        this.size = { width: this.terminal.width, height: this.terminal.height }
+        this.depth_buffer = new DepthBuffer (this.size.width, this.size.height)
+        this.color_buffer = new Texture     (this.size.width, this.size.height)
+    }
+
+    private assert_buffers() {
+        if(this.terminal.width  !== this.size.width ||
+           this.terminal.height !== this.size.height) {
+               this.setup_buffers()
+           }
     }
 }

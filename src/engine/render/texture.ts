@@ -33,9 +33,7 @@ export class Texture implements RenderTarget {
     private data: Float32Array
 
     constructor(public width: number, public height: number) {
-        this.width  = this.width 
-        this.height = this.height
-        this.data   = new Float32Array(this.width * this.height * 4)
+        this.data = new Float32Array(this.width * this.height * 4)
     }
     
     /** Clears this texture with the given color. */

@@ -26,12 +26,12 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-
-import { Renderer, Camera, Radian }   from './engine/index'
-import { Matrix, Vector4, Vector3 }   from './engine/index'
-import { load_scene, load_animation } from './loader'
-import { join }                       from 'path'
-
+import { Stopwatch }                    from './engine/index'
+import { Renderer, Camera, Radian }     from './engine/index'
+import { Matrix, Vector4, Vector3 }     from './engine/index'
+import { AsciiTerminal, ColorTerminal } from './engine/index'
+import { load_scene, load_animation }   from './loader'
+import { join }                         from 'path'
 
 console.log(`
                                          .___                     
@@ -44,16 +44,16 @@ ________ ___________  ____             __| _/____   _____   ____
       reduce your terminal font size for better resolution                                                   
 `)
 
-const animation     = load_animation(join(__dirname, './scene'))
-const scene         = load_scene(join(__dirname, './scene'))
-const renderer      = new Renderer({ safeWidth: 380, safeHeight: 140 })
-const camera        = new Camera()
+const animation = load_animation(join(__dirname, './scene'))
+const scene     = load_scene(join(__dirname, './scene'))
+const terminal  = process.argv.includes('--color') ? new ColorTerminal() : new AsciiTerminal()
+const stopwatch = new Stopwatch()
+const renderer  = new Renderer(terminal)
+const camera    = new Camera()
 
-function loop () {
-
-    process.title = `zero-demo: ${renderer.width()} x ${renderer.height()} @ ${renderer.fps()} fps - Sinclair: October 2019`
-
-    const aspect  = renderer.width() / (renderer.height() * 2.0)
+async function loop() {
+    process.title = `zero-demo: ${terminal.width} x ${terminal.height} @ ${stopwatch.get()} fps - Sinclair: November 2019`
+    const aspect  = terminal.width / (terminal.height * 2.0)
     const state   = animation.state('camera', (Date.now() / 24) % animation.length('camera'))
     camera.projection = Matrix.perspectiveFov(Radian.fromAngle(90), aspect, 0.1, 1000)
     camera.view = Matrix.lookAt(
@@ -72,11 +72,14 @@ function loop () {
             state.up[1],
             state.up[2]
         ),
-    );
+    )
+
+    stopwatch.start()
     renderer.clear(Vector4.create(1, 1, 1, 0))
     renderer.render(camera, scene)
+    stopwatch.stop()
 
-    setTimeout(() => loop())
+    setImmediate(() => loop())
 }
-
 loop()
+

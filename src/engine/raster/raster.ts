@@ -297,7 +297,7 @@ export class Raster {
         }
         // min | max within viewport width.
         min_x = Math.max(min_x, 0);
-        max_x = Math.min(max_x, target.width - 1);
+        max_x = Math.min(max_x, target.width);
         
         // Calculate edge value
         const edge = Raster.edge(clippos_0, clippos_1, clippos_2);

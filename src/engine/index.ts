@@ -65,7 +65,15 @@ export {
     Object3D,
     Renderer,
     Scene,
-    Terminal,
     Texture,
     TextureMaterial
 } from './render/index'
+
+export {
+    AsciiTerminal,
+    ColorTerminal
+} from './terminal/index'
+
+export {
+    Stopwatch
+} from './timing/index'

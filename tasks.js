@@ -27,7 +27,6 @@ export async function pack() {
     await folder('pack').add('scene').exec()
     await folder('pack/scene').remove('source').exec()
     await folder('pack').add('package.json').exec()
-    await folder('pack').add('terminal.gif').exec()
     await folder('pack').add('readme.md').exec()
     await folder('pack').add('license').exec()
     await shell('cd pack && npm pack').exec()
