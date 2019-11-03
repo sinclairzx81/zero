@@ -44,6 +44,10 @@ Licence MIT
 
 ### 24-bit True Color Support
 
+<div align='center'>
+<img src='terminal-color.gif'></img>
+</div>
+
 ANSI True Color is known to not work on the classic Windows and Powershell terminals, but may in the new Windows Terminal. The colored GIF above was captured in standard terminal provided by Linux Mint 19.2. Performance may vary greated based on the capabilities of the host terminal.
 
 ### Building Locally
