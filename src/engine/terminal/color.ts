@@ -59,10 +59,10 @@ export class ColorTerminal implements Terminal {
     public async present(texture: Texture) {
         this.assert_buffers()
         
-        // register to hold color data
+        // a register to hold color data
         const color = Vector4.zero()
         
-        // write pixels data to buffer stream
+        // write pixel data to buffer stream
         for (let y = 0; y < this.size.height; y++) {
             for (let x = 0; x < this.size.width; x++) {
                 texture.fast_get(x, y, color)
@@ -72,7 +72,7 @@ export class ColorTerminal implements Terminal {
         }
         this.stream.write(this.ansi_reset)
 
-        // blit to the screen
+        // blit buffer to the terminal
         const buffer = this.stream.read()
         process.stdout.write(buffer)
     }
@@ -96,7 +96,7 @@ export class ColorTerminal implements Terminal {
 
     private setup_buffers() {
         this.size           = { width: Host.width, height: Host.height }
-        this.stream         = new Stream(16_000_000)
+        this.stream         = new Stream(8_000_000)
 
         this.ansi_begin     = Buffer.from(`\x1b[48;2;`)
         this.ansi_numerics  = Array.from({ length: 256 }).map((_, i) => Buffer.from(i.toString()))
