@@ -106,7 +106,7 @@ export class Renderer {
     public render(camera: Camera, scene: Scene) {
         this.assert_buffers()
         this.render_scene(camera, scene, scene.matrix)
-        return this.terminal.present(this.colorBuffer)
+        this.terminal.present(this.colorBuffer)
     }
 
     private assert_buffers() {
