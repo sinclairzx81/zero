@@ -11,14 +11,11 @@ required.</p>
 
 </div>
 
-
 ```bash
 # start the demo in ascii mode (default)
-
 $ npx zero-demo@latest
 
-# start the demo in 24-bit true color mode (only if supported)
-
+# start the demo in 24-bit true color mode (experimental)
 $ npx zero-demo@latest --color
 ```
 
@@ -33,22 +30,12 @@ Zero implements:
 - Perspective Z-Correct Texture Mapping
 - Per Pixel Depth Buffering
 - Adaptive Resolution on Terminal resize (TTY only)
-- Support for 24bit true color (requires terminal)
+- Support for 24bit true color (terminal must support 24-bit color)
 - Matrix and Vector math libraries.
 - A Scene Graph
 - Support for Windows Command Prompt, Powershell and Linux Terminals
 
 Licence MIT
-
----
-
-<div align='center'>
-<h2>24-bit True Color Support</h2>
-<img src='https://github.com/sinclairzx81/zero/raw/master/terminal-color.gif'></img>
-<p><i>Please note, ANSI True Color is known to not work on the Windows Command Line and Powershell terminals, but may in the new Windows Terminal. The above gif was captured in the standard terminal provided by Linux Mint 19.2. Performance may vary based on the capabilities of the host terminal.</i></p>
-</div>
-
----
 
 ### Building Locally
 
