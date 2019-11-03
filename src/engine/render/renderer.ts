@@ -37,18 +37,11 @@ import { Scene }           from './scene'
 import { Mesh }            from './mesh'
 
 export class Renderer {
-    private size = { width: 0, height: 0 }
-    private depthBuffer!: DepthBuffer
-    private colorBuffer!: Texture
+    private depth_buffer!: DepthBuffer
+    private color_buffer!: Texture
 
     constructor(private terminal: Terminal) {
         this.setup_buffers()
-    }
-
-    private setup_buffers() {
-        this.size = { width: this.terminal.width, height: this.terminal.height }
-        this.depthBuffer = new DepthBuffer (this.terminal.width, this.terminal.height)
-        this.colorBuffer = new Texture     (this.terminal.width, this.terminal.height)
     }
 
     private render_object(camera: Camera, object3D: Object3D, transform: Matrix) {
@@ -87,8 +80,8 @@ export class Renderer {
             Raster.triangle(
                 material.vertexProgram,
                 material.fragmentProgram,
-                this.depthBuffer!,
-                this.colorBuffer!,
+                this.depth_buffer!,
+                this.color_buffer!,
                 uniform,
                 vertex_0,
                 vertex_1,
@@ -99,14 +92,22 @@ export class Renderer {
 
     public clear(color: Vector4) {
         this.assert_buffers()
-        this.colorBuffer.clear(color)
-        this.depthBuffer.clear()
+        this.color_buffer.clear(color)
+        this.depth_buffer.clear()
     }
 
     public render(camera: Camera, scene: Scene) {
         this.assert_buffers()
         this.render_scene(camera, scene, scene.matrix)
-        this.terminal.present(this.colorBuffer)
+        this.terminal.present(this.color_buffer)
+    }
+
+    private size = { width: 0, height: 0 }
+
+    private setup_buffers() {
+        this.size = { width: this.terminal.width, height: this.terminal.height }
+        this.depth_buffer = new DepthBuffer (this.size.width, this.size.height)
+        this.color_buffer = new Texture     (this.size.width, this.size.height)
     }
 
     private assert_buffers() {

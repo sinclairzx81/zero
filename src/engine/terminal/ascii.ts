@@ -29,18 +29,22 @@ THE SOFTWARE.
 import { Vector4 }  from '../math/index'
 import { Texture }  from '../render/texture'
 import { Terminal } from './terminal'
+import { Stream }   from './stream'
 import { Host }     from './host'
 
+/** Ascii gradient terminal. Uses a character color ramp to produce output. */
 export class AsciiTerminal implements Terminal {
-    private size = { width: 0, height: 0 }
-    private gradient: number[] = ' .:;+=xX$#&'.split('').map(n => n.charCodeAt(0))
-    private buffer!:  Buffer
-    private reset!:   Buffer
+    private stream!:         Stream
+    
+    // ansi cache
+    private ansi_reset!:     Buffer
+    private ansi_newline!:   Buffer
+    private ansi_gradient!:  Buffer[]
 
     constructor() {
         this.setup_buffers()
     }
-    
+
     public get width(): number {
         return this.size.width
     }
@@ -51,27 +55,23 @@ export class AsciiTerminal implements Terminal {
 
     public async present(texture: Texture) {
         this.assert_buffers()
+        
+        // register to hold color data
         const color = Vector4.zero()
-        for (let y = 0; y < Host.height; y++) {
-            for (let x = 0; x < (Host.width - 1); x++) {
-                const offset = this.offset(x, y)
-                if (x >= texture.width && y >= texture.height) {
-                    this.buffer[offset] = this.gradient[0]
-                } else {
-                    texture.fast_get(x, y, color)
-                    const index = this.compute_color_ramp_index(color)
-                    this.buffer[offset] = this.gradient[index]
-                }
-            }
-        }
-        process.stdout.write(this.buffer)
-        process.stdout.write(this.reset)
-    }
 
-    private compute_color_ramp_index(color: Vector4): number {
-        const average = (color.v[0] + color.v[1] + color.v[2]) / 3
-        const shade   = this.clamp(average)
-        return (shade * (this.gradient.length - 1)) | 0
+        // write pixels data to buffer stream
+        for (let y = 0; y < this.size.height; y++) {
+            for (let x = 0; x < this.size.width; x++) {
+                texture.fast_get(x, y, color)
+                this.write_pixel(color)
+            }
+            this.stream.write(this.ansi_newline)
+        }
+        this.stream.write(this.ansi_reset)
+
+        // blit to the screen
+        const buffer = this.stream.read()
+        process.stdout.write(buffer)
     }
 
     private clamp(x: number): number {
@@ -80,24 +80,38 @@ export class AsciiTerminal implements Terminal {
         return x
     }
 
-    private offset(x: number, y: number): number {
-        return x + (y * Host.width)
+    private compute_gradient_index(color: Vector4): number {
+        const average = (color.v[0] + color.v[1] + color.v[2]) / 3
+        const shade   = this.clamp(average)
+        return (shade * (this.ansi_gradient.length - 1)) | 0
+    }
+    
+    private write_pixel(color: Vector4) {
+        const index = this.compute_gradient_index(color)
+        const character = this.ansi_gradient[index]
+        this.stream.write(character)
     }
 
-    private setup_buffers(): void {
-        this.size   = { width: Host.width, height: Host.height }
-        this.buffer = Buffer.alloc((Host.width + 1) * Host.height)
-        this.reset  = Buffer.from(`\x1b[${Host.width}D\x1b[${Host.height}A`)
-        for (let y = 0; y < Host.height; y++) {
-            const index = (Host.width - 1) + (y * Host.width)
-            this.buffer[index] = 0x0a
-        }
+    private size = { width: 0, height: 0 }
+
+    private setup_buffers() {
+        this.size           = { width: Host.width, height: Host.height }
+        this.stream         = new Stream(2_000_000)
+        this.ansi_gradient  = ' .:;+=xX$#&'.split('').map(n => Buffer.from(n))
+        this.ansi_newline   = Buffer.from('\n')
+        this.ansi_reset     = Buffer.concat([
+            Buffer.from(`\x1b[${this.size.width}D`),
+            Buffer.from(`\x1b[${this.size.height}A`)
+        ])
     }
 
     private assert_buffers() {
-        if (Host.width  !== this.size.width ||
-            Host.height !== this.size.height) {
-            this.setup_buffers()
+        if (Host.width !== this.size.width || Host.height !== this.size.height) {
+            this.size = { width: Host.width, height: Host.height }
+            this.ansi_reset = Buffer.concat([
+                Buffer.from(`\x1b[${this.size.width}D`), 
+                Buffer.from(`\x1b[${this.size.height}A`)
+            ])
         }
     }
 }

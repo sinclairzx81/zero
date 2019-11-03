@@ -26,78 +26,96 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Vector4 }   from '../math/index'
-import { Texture }   from '../render/texture'
-import { Host }      from './host'
+import { Vector4 }  from '../math/index'
+import { Texture }  from '../render/texture'
+import { Terminal } from './terminal'
+import { Stream }   from './stream'
+import { Host }     from './host'
 
-const COLOR_BUFFER_SIZE = 8_000_000
-
-export class ColorTerminal {
-    private size = { width: 0, height: 0 }
-    private pointer:  number = 0
-    private buffer!:  Buffer
-    private reset!:   Buffer
-    private newline!: Buffer
+/** ANSI true-color terminal. */
+export class ColorTerminal implements Terminal {
+    private stream!:         Stream
+    
+    // ansi cache
+    private ansi_reset!:     Buffer
+    private ansi_newline!:   Buffer
+    private ansi_begin!:     Buffer
+    private ansi_delimiter!: Buffer
+    private ansi_numerics!:  Buffer[]
+    private ansi_end!:       Buffer
 
     constructor() {
         this.setup_buffers()
     }
 
     public get width(): number {
-        return Host.width
+        return this.size.width
     }
 
     public get height(): number {
-        return Host.height
+        return this.size.height
     }
 
     public async present(texture: Texture) {
         this.assert_buffers()
-        for (let y = 0; y < Host.height; y++) {
-            for (let x = 0; x < (Host.width - 1); x++) {
-                if (x >= texture.width && y >= texture.height) {
-                    const color = this.color(Vector4.create(0, 0, 0, 0))
-                    this.append(color)
-                } else {
-                    const color  = texture.get(x, y)
-                    const buffer = this.color(color)
-                    this.append(buffer)
-                }
+        
+        // register to hold color data
+        const color = Vector4.zero()
+        
+        // write pixels data to buffer stream
+        for (let y = 0; y < this.size.height; y++) {
+            for (let x = 0; x < this.size.width; x++) {
+                texture.fast_get(x, y, color)
+                this.write_pixel(color)
             }
-            this.append(this.newline)
+            this.stream.write(this.ansi_newline)
         }
+        this.stream.write(this.ansi_reset)
 
-        // blit buffers to terminal
-        process.stdout.write(this.buffer.slice(0, this.pointer))
-        process.stdout.write(this.reset)
-        this.pointer = 0
+        // blit to the screen
+        const buffer = this.stream.read()
+        process.stdout.write(buffer)
     }
 
-    private color(color: Vector4): Buffer {
+    private write_pixel(color: Vector4) {
         const r = Math.floor(color.v[0] * 255)
         const g = Math.floor(color.v[1] * 255)
         const b = Math.floor(color.v[2] * 255)
-        return Buffer.from(`\x1b[48;2;${r};${g};${b}m `)
+
+        // `\x1b[48;2;${r};${g};${b}m `
+        this.stream.write(this.ansi_begin)
+        this.stream.write(this.ansi_numerics[r])
+        this.stream.write(this.ansi_delimiter)
+        this.stream.write(this.ansi_numerics[g])
+        this.stream.write(this.ansi_delimiter)
+        this.stream.write(this.ansi_numerics[b])
+        this.stream.write(this.ansi_end)
     }
 
-    private append(buffer: Buffer) {
-        for(let i = 0; i < buffer.length; i+=1){
-            this.buffer[this.pointer] = buffer[i]
-            this.pointer += 1 
-        }
-    }
+    private size = { width: 0, height: 0 }
 
-    private setup_buffers(): void {
-        this.size    = { width: Host.width, height: Host.height }
-        this.buffer  = Buffer.alloc(COLOR_BUFFER_SIZE)
-        this.reset   = Buffer.from(`\x1b[${Host.width}D\x1b[${Host.height}A`)
-        this.newline = Buffer.from('\x1b[48;2;0;0;0m\n')
+    private setup_buffers() {
+        this.size           = { width: Host.width, height: Host.height }
+        this.stream         = new Stream(16_000_000)
+
+        this.ansi_begin     = Buffer.from(`\x1b[48;2;`)
+        this.ansi_numerics  = Array.from({ length: 256 }).map((_, i) => Buffer.from(i.toString()))
+        this.ansi_delimiter = Buffer.from(';')
+        this.ansi_end       = Buffer.from(`m `)
+        this.ansi_newline = Buffer.from('\x1b[48;2;0;0;0m\n')
+        this.ansi_reset   = Buffer.concat([
+            Buffer.from(`\x1b[${this.size.width}D`),
+            Buffer.from(`\x1b[${this.size.height}A`)
+        ])
     }
 
     private assert_buffers() {
-        if (Host.width !== this.size.width ||
-            Host.height !== this.size.height) {
-            this.setup_buffers()
+        if (Host.width !== this.size.width || Host.height !== this.size.height) {
+            this.size = { width: Host.width, height: Host.height }
+            this.ansi_reset = Buffer.concat([
+                Buffer.from(`\x1b[${this.size.width}D`), 
+                Buffer.from(`\x1b[${this.size.height}A`)
+            ])
         }
     }
 }
