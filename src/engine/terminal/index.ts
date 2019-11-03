@@ -26,54 +26,7 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export {
-    Animation
-} from './animation/index'
-
-export {
-    Angle,
-    Box,
-    Frustum,
-    Matrix,
-    Plane,
-    Quaternion, 
-    Radian,
-    Ray,
-    Single,
-    Sphere,
-    Triangle,
-    Vector2,
-    Vector3,
-    Vector4,
-    VectorN
-} from './math/index'
-
-export {
-    DepthBuffer,
-    FragmentProgram,
-    VertexProgram,
-    OutputBuffer,
-    Raster,
-    Vertex
-} from './raster/index'
-
-export {
-    Camera,
-    Geometry,
-    Material,
-    Mesh,
-    Object3D,
-    Renderer,
-    Scene,
-    Texture,
-    TextureMaterial
-} from './render/index'
-
-export {
-    AsciiTerminal,
-    ColorTerminal
-} from './terminal/index'
-
-export {
-    Stopwatch
-} from './timing/index'
+export { Host }          from './host'
+export { Terminal }      from './terminal'
+export { AsciiTerminal } from './ascii'
+export { ColorTerminal } from './color'

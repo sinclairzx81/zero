@@ -26,54 +26,16 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export {
-    Animation
-} from './animation/index'
+import { Texture } from '../render/texture'
 
-export {
-    Angle,
-    Box,
-    Frustum,
-    Matrix,
-    Plane,
-    Quaternion, 
-    Radian,
-    Ray,
-    Single,
-    Sphere,
-    Triangle,
-    Vector2,
-    Vector3,
-    Vector4,
-    VectorN
-} from './math/index'
+export interface Terminal {
 
-export {
-    DepthBuffer,
-    FragmentProgram,
-    VertexProgram,
-    OutputBuffer,
-    Raster,
-    Vertex
-} from './raster/index'
-
-export {
-    Camera,
-    Geometry,
-    Material,
-    Mesh,
-    Object3D,
-    Renderer,
-    Scene,
-    Texture,
-    TextureMaterial
-} from './render/index'
-
-export {
-    AsciiTerminal,
-    ColorTerminal
-} from './terminal/index'
-
-export {
-    Stopwatch
-} from './timing/index'
+    /** The width of this terminal */
+    readonly width: number
+    
+    /** The height of this terminal */
+    readonly height: number
+    
+    /** Asynchronously submits this buffer. */
+    present(texture: Texture): Promise<void>
+}

@@ -26,54 +26,38 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export {
-    Animation
-} from './animation/index'
+/** safe-ish host dimensions when not running in TTY */
+const SAFE_WIDTH  = 80
+const SAFE_HEIGHT = 24
 
-export {
-    Angle,
-    Box,
-    Frustum,
-    Matrix,
-    Plane,
-    Quaternion, 
-    Radian,
-    Ray,
-    Single,
-    Sphere,
-    Triangle,
-    Vector2,
-    Vector3,
-    Vector4,
-    VectorN
-} from './math/index'
+export class Host {
+    private static _ = process.stdout.on('resize', () => Host.resize())
+    public static width  = Host.get_width()
+    public static height = Host.get_height()
 
-export {
-    DepthBuffer,
-    FragmentProgram,
-    VertexProgram,
-    OutputBuffer,
-    Raster,
-    Vertex
-} from './raster/index'
+    /** Resets the terminal width and height. */
+    private static resize() {
+        this.width  = Host.get_width()
+        this.height = Host.get_height()
+    }
 
-export {
-    Camera,
-    Geometry,
-    Material,
-    Mesh,
-    Object3D,
-    Renderer,
-    Scene,
-    Texture,
-    TextureMaterial
-} from './render/index'
+    /** Returns the current width of the terminal or SAFE_WIDTH if not TTY. */
+    private static get_width(): number {
+        return process.stdout.isTTY 
+            ? process.stdout.columns 
+            : SAFE_WIDTH
+    }
 
-export {
-    AsciiTerminal,
-    ColorTerminal
-} from './terminal/index'
+    /** Returns the current height of the terminal - 1 or SAFE_HEIGHT if not TTY. */
+    private static get_height(): number {
+        if(process.stdout.isTTY) {
+            return (process.stdout.rows >= 3)
+                ? process.stdout.rows - 1
+                : 1
+        } else {
+            return SAFE_HEIGHT
+        }
+    }
+}
 
-export {
-    Stopwatch
-} from './timing/index'
+

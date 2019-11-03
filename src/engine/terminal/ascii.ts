@@ -26,65 +26,52 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Texture } from './texture'
-import { Vector4 } from '../math';
+import { Vector4 }  from '../math/index'
+import { Texture }  from '../render/texture'
+import { Terminal } from './terminal'
+import { Host }     from './host'
 
-export class Terminal {
-    private ramp = ' .:;+=xX$#&'.split('').map(n => n.charCodeAt(0))
-    private buffer: Uint8Array
+export class AsciiTerminal implements Terminal {
+    private size = { width: 0, height: 0 }
+    private gradient: number[] = ' .:;+=xX$#&'.split('').map(n => n.charCodeAt(0))
+    private buffer!:  Buffer
+    private reset!:   Buffer
+
+    constructor() {
+        this.setup_buffers()
+    }
     
-    constructor(private width: number, private height: number) {
-        this.buffer = new Uint8Array((this.width + 1) * this.height)
-        for (let y = 0; y < this.height; y++) {
-            let x = this.width - 1;
-            let i = x + (y * this.width)
-            this.buffer[i] = 0x0a
-        }
+    public get width(): number {
+        return this.size.width
     }
 
-    public stats(): string {
-        const used = process.memoryUsage().heapUsed / 1024 / 1024;
-        return `Memory: ${Math.round(used * 100) / 100} MB`;
+    public get height(): number {
+        return this.size.height
     }
 
-    /** Presents this texture to the terminal. */
-    public present(texture: Texture) {
-        // Create output color variable to write to. Usually
-        // faster than creating new JS objects per pixel.
+    public async present(texture: Texture) {
+        this.assert_buffers()
         const color = Vector4.zero()
-
-        // Maps the texture buffer into the gradient buffer.
-        for (let y = 0; y < this.height; y++) {
-            for (let x = 0; x < (this.width - 1); x++) {
+        for (let y = 0; y < Host.height; y++) {
+            for (let x = 0; x < (Host.width - 1); x++) {
                 const offset = this.offset(x, y)
-                // The 'terminal' may be larger than the texture 
-                // being presented. If larger set terminal out
-                // as black.
                 if (x >= texture.width && y >= texture.height) {
-                    this.buffer[offset] = this.ramp[0]
+                    this.buffer[offset] = this.gradient[0]
                 } else {
-                    texture.fast_get(x, y, color)                    
+                    texture.fast_get(x, y, color)
                     const index = this.compute_color_ramp_index(color)
-                    this.buffer[offset] = this.ramp[index]
+                    this.buffer[offset] = this.gradient[index]
                 }
             }
         }
-
-        // Blit buffer and reset back to position.
         process.stdout.write(this.buffer)
-        process.stdout.write(`\x1b[${this.width}D`)
-        process.stdout.write(`\x1b[${this.height}A`)
-
-        // const x = this.stats()
-        // process.stdout.write(x)
-        // process.stdout.write(`\x1b[${x.length}D`)
-
+        process.stdout.write(this.reset)
     }
 
     private compute_color_ramp_index(color: Vector4): number {
         const average = (color.v[0] + color.v[1] + color.v[2]) / 3
         const shade   = this.clamp(average)
-        return (shade * (this.ramp.length - 1)) | 0
+        return (shade * (this.gradient.length - 1)) | 0
     }
 
     private clamp(x: number): number {
@@ -94,6 +81,23 @@ export class Terminal {
     }
 
     private offset(x: number, y: number): number {
-        return x + (y * this.width)
+        return x + (y * Host.width)
+    }
+
+    private setup_buffers(): void {
+        this.size   = { width: Host.width, height: Host.height }
+        this.buffer = Buffer.alloc((Host.width + 1) * Host.height)
+        this.reset  = Buffer.from(`\x1b[${Host.width}D\x1b[${Host.height}A`)
+        for (let y = 0; y < Host.height; y++) {
+            const index = (Host.width - 1) + (y * Host.width)
+            this.buffer[index] = 0x0a
+        }
+    }
+
+    private assert_buffers() {
+        if (Host.width  !== this.size.width ||
+            Host.height !== this.size.height) {
+            this.setup_buffers()
+        }
     }
 }

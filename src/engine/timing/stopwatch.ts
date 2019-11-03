@@ -26,54 +26,29 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-export {
-    Animation
-} from './animation/index'
+export class Stopwatch {
+    private samples: number[]
+    private current: number
+    private index:   number
 
-export {
-    Angle,
-    Box,
-    Frustum,
-    Matrix,
-    Plane,
-    Quaternion, 
-    Radian,
-    Ray,
-    Single,
-    Sphere,
-    Triangle,
-    Vector2,
-    Vector3,
-    Vector4,
-    VectorN
-} from './math/index'
+    constructor(samples: number = 32) {
+        this.samples = Array.from({ length: samples }, () => 0)
+        this.current = Date.now()
+        this.index   = 0
+    }
 
-export {
-    DepthBuffer,
-    FragmentProgram,
-    VertexProgram,
-    OutputBuffer,
-    Raster,
-    Vertex
-} from './raster/index'
+    public start() {
+        this.current = Date.now()
+    }
 
-export {
-    Camera,
-    Geometry,
-    Material,
-    Mesh,
-    Object3D,
-    Renderer,
-    Scene,
-    Texture,
-    TextureMaterial
-} from './render/index'
+    public stop() {
+        const delta = Date.now() - this.current
+        this.samples[this.index] = delta === 0 ? 1000 : (1000 / delta)
+        this.index = (this.index + 1) % this.samples.length
+    }
 
-export {
-    AsciiTerminal,
-    ColorTerminal
-} from './terminal/index'
-
-export {
-    Stopwatch
-} from './timing/index'
+    public get(): number {
+        const total = this.samples.reduce((acc, c) => acc + c, 0)
+        return (total / this.samples.length) | 0
+    }
+}
