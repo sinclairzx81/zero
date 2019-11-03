@@ -15,11 +15,11 @@ required.</p>
 ```bash
 # start the demo in ascii mode (default)
 
-$ npx zero-demo
+$ npx zero-demo@latest
 
 # start the demo in 24-bit true color mode (only if supported)
 
-$ npx zero-demo --color
+$ npx zero-demo@latest --color
 ```
 
 ### Overview
