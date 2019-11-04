@@ -21,7 +21,7 @@ $ npx zero-demo@latest --color
 
 ### Overview
 
-Zero is a small graphics demo that uses JavaScript to replicate the functionality of a GPU and uses the terminal to display its rendered output via nodejs' stdout. Zero was written for fun and to see how far JavaScript performance could reasonably be pushed. Rendering has been tested on Windows, OSX and Linux terminals.
+Zero is a small graphics demo that uses JavaScript to replicate the functionality of a GPU and uses the terminal to display its rendered output via nodejs' stdout. Zero was written for fun and to see how far JavaScript performance could reasonably be pushed. ASCII rendering has been tested on Windows, OSX and Linux terminals. ANSI 24-bit true color rendering has been tested on the default Linux Mint 19.2 terminal, but should work on most terminals that support this feature.
 
 This project and associative materials are offered as is to anyone who may find them of use.
 
