@@ -26,13 +26,10 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------*/
 
-import { Vector4, Vector3, Vector2 } from '../math/index'
-import { Vertex }       from '../raster/index'
-import { readFileSync } from 'fs'
+import { Vertex } from '../raster/index'
 
-/**
- * Render Geometry type.
- */
+
+/** Geometry Type */
 export class Geometry {
     constructor(public vertices: Vertex[],
                 public indices:  number[]) { }

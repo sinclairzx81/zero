@@ -44,14 +44,14 @@ ________ ___________  ____             __| _/____   _____   ____
       reduce your terminal font size for better resolution                                                   
 `)
 
+const terminal  = process.argv.includes('--color') ? new ColorTerminal() : new AsciiTerminal()
 const animation = load_animation(join(__dirname, './scene'))
 const scene     = load_scene(join(__dirname, './scene'))
-const terminal  = process.argv.includes('--color') ? new ColorTerminal() : new AsciiTerminal()
-const stopwatch = new Stopwatch()
 const renderer  = new Renderer(terminal)
 const camera    = new Camera()
+const stopwatch = new Stopwatch()
 
-async function loop() {
+function loop() {
     process.title = `zero-demo: ${terminal.width} x ${terminal.height} @ ${stopwatch.get()} fps - Sinclair: November 2019`
     const aspect  = terminal.width / (terminal.height * 2.0)
     const state   = animation.state('camera', (Date.now() / 24) % animation.length('camera'))
