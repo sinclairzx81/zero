@@ -27,7 +27,6 @@ THE SOFTWARE.
 ---------------------------------------------------------------------------*/
 
 import { Matrix, Vector4 } from '../math/index'
-import { Terminal }        from '../terminal/index'
 import { DepthBuffer }     from '../raster/index'
 import { Raster }          from '../raster/index'
 import { Texture }         from './texture'
@@ -36,11 +35,12 @@ import { Object3D }        from './object'
 import { Scene }           from './scene'
 import { Mesh }            from './mesh'
 
-export class Renderer {
-    private depth_buffer!: DepthBuffer
-    private color_buffer!: Texture
 
-    constructor(private terminal: Terminal) {
+export class Renderer {
+    public depth_buffer!: DepthBuffer
+    public color_buffer!: Texture
+
+    constructor() {
         this.setup_buffers()
     }
 
@@ -90,30 +90,29 @@ export class Renderer {
         }
     }
 
+    /** Resizes the renderer buffers. */
+    public resize(width: number, height: number) {
+        if(this.size.width !== width || this.size.height !== height) {
+            this.size = { width: width | 0, height:height | 0 }
+            this.setup_buffers()
+        }
+    }
+
+    /** Clears this renderer buffers. */
     public clear(color: Vector4) {
-        this.assert_buffers()
         this.color_buffer.clear(color)
         this.depth_buffer.clear()
     }
 
+    /** Renders this scene with the given camera. */
     public render(camera: Camera, scene: Scene) {
-        this.assert_buffers()
         this.render_scene(camera, scene, scene.matrix)
-        this.terminal.present(this.color_buffer)
     }
 
-    private size = { width: 0, height: 0 }
+    private size = { width: 8, height: 8 }
 
     private setup_buffers() {
-        this.size = { width: this.terminal.width, height: this.terminal.height }
         this.depth_buffer = new DepthBuffer (this.size.width, this.size.height)
         this.color_buffer = new Texture     (this.size.width, this.size.height)
-    }
-
-    private assert_buffers() {
-        if(this.terminal.width  !== this.size.width ||
-           this.terminal.height !== this.size.height) {
-               this.setup_buffers()
-           }
     }
 }
