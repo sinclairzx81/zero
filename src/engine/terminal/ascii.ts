@@ -53,23 +53,23 @@ export class AsciiTerminal implements Terminal {
         return this.size.height
     }
 
-    public async present(texture: Texture) {
+    public present(texture: Texture) {
         this.assert_buffers()
         
-        // a register to hold color data
-        const color = Vector4.zero()
+        // Register to hold sampled color data
+        const color_0 = Vector4.zero()
 
-        // write pixel data to buffer stream
+        // A write pixel data to buffer stream
         for (let y = 0; y < this.size.height; y++) {
             for (let x = 0; x < this.size.width; x++) {
-                texture.fast_get(x, y, color)
-                this.write_pixel(color)
+                texture.fast_get(x % texture.width, y % texture.height, color_0)
+                this.write_pixel(color_0)
             }
             this.stream.write(this.ansi_newline)
         }
         this.stream.write(this.ansi_reset)
 
-        // blit buffer to the terminal
+        // Blit buffer to the terminal
         const buffer = this.stream.read()
         process.stdout.write(buffer)
     }

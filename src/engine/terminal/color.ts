@@ -39,10 +39,13 @@ export class ColorTerminal implements Terminal {
     // ansi cache
     private ansi_reset!:     Buffer
     private ansi_newline!:   Buffer
-    private ansi_begin!:     Buffer
+    private ansi_character!: Buffer
+    private ansi_bg_begin!:  Buffer
+    private ansi_bg_end!:    Buffer
+    private ansi_fg_begin!:  Buffer
+    private ansi_fg_end!:    Buffer
     private ansi_delimiter!: Buffer
     private ansi_numerics!:  Buffer[]
-    private ansi_end!:       Buffer
 
     constructor() {
         this.setup_buffers()
@@ -53,57 +56,84 @@ export class ColorTerminal implements Terminal {
     }
 
     public get height(): number {
-        return this.size.height
+
+        // Here we return twice the height of the
+        // actual terminal due to encoding two
+        // pixels within a single output character.
+        return (this.size.height * 2)
     }
 
-    public async present(texture: Texture) {
+    public present(texture: Texture) {
         this.assert_buffers()
         
-        // a register to hold color data
-        const color = Vector4.zero()
+        // Registers to hold sampled color data
+        const color_0 = Vector4.zero()
+        const color_1 = Vector4.zero()
         
-        // write pixel data to buffer stream
-        for (let y = 0; y < this.size.height; y++) {
+        // Write pixel data to buffer stream
+        for (let y_0 = 0, y_1 = 0; y_0 < this.size.height; y_0++, y_1 += 2) {
             for (let x = 0; x < this.size.width; x++) {
-                texture.fast_get(x, y, color)
-                this.write_pixel(color)
+                texture.fast_get(x % texture.width, (y_1 + 0) % texture.height, color_0)
+                texture.fast_get(x % texture.width, (y_1 + 1) % texture.height, color_1)
+                this.write_pixel(color_0, color_1)
             }
             this.stream.write(this.ansi_newline)
         }
         this.stream.write(this.ansi_reset)
 
-        // blit buffer to the terminal
+        // Blit buffer to the terminal
         const buffer = this.stream.read()
         process.stdout.write(buffer)
     }
 
-    private write_pixel(color: Vector4) {
-        const r = Math.floor(color.v[0] * 255)
-        const g = Math.floor(color.v[1] * 255)
-        const b = Math.floor(color.v[2] * 255)
+    private write_pixel(color_0: Vector4, color_1: Vector4) {
+        // `\x1b[48;2;${r};${g};${b}m`
+        // `\x1b[38;2;${r};${g};${b}m`
+        // background
+        {
+            const r = Math.floor(color_0.v[0] * 255)
+            const g = Math.floor(color_0.v[1] * 255)
+            const b = Math.floor(color_0.v[2] * 255)
+            this.stream.write(this.ansi_bg_begin)
+            this.stream.write(this.ansi_numerics[r])
+            this.stream.write(this.ansi_delimiter)
+            this.stream.write(this.ansi_numerics[g])
+            this.stream.write(this.ansi_delimiter)
+            this.stream.write(this.ansi_numerics[b])
+            this.stream.write(this.ansi_bg_end)
+        }
 
-        // `\x1b[48;2;${r};${g};${b}m `
-        this.stream.write(this.ansi_begin)
-        this.stream.write(this.ansi_numerics[r])
-        this.stream.write(this.ansi_delimiter)
-        this.stream.write(this.ansi_numerics[g])
-        this.stream.write(this.ansi_delimiter)
-        this.stream.write(this.ansi_numerics[b])
-        this.stream.write(this.ansi_end)
+        // foreground
+        {
+            const r = Math.floor(color_1.v[0] * 255)
+            const g = Math.floor(color_1.v[1] * 255)
+            const b = Math.floor(color_1.v[2] * 255)
+            this.stream.write(this.ansi_fg_begin)
+            this.stream.write(this.ansi_numerics[r])
+            this.stream.write(this.ansi_delimiter)
+            this.stream.write(this.ansi_numerics[g])
+            this.stream.write(this.ansi_delimiter)
+            this.stream.write(this.ansi_numerics[b])
+            this.stream.write(this.ansi_fg_end)
+        }
+
+        // character
+        this.stream.write(this.ansi_character)
     }
 
     private size = { width: 0, height: 0 }
-
     private setup_buffers() {
-        this.size           = { width: Host.width, height: Host.height }
-        this.stream         = new Stream(8_000_000)
-
-        this.ansi_begin     = Buffer.from(`\x1b[48;2;`)
+        this.size           = { width: Host.width|0, height: Host.height|0 }
+        this.stream         = new Stream(16_000_000)
+        this.ansi_character = Buffer.from(new Uint8Array([226, 150, 132])) // ASCII-EXT: 220
         this.ansi_numerics  = Array.from({ length: 256 }).map((_, i) => Buffer.from(i.toString()))
         this.ansi_delimiter = Buffer.from(';')
-        this.ansi_end       = Buffer.from(`m `)
-        this.ansi_newline = Buffer.from('\x1b[48;2;0;0;0m\n')
-        this.ansi_reset   = Buffer.concat([
+        this.ansi_bg_begin  = Buffer.from(`\x1b[48;2;`)
+        this.ansi_bg_end    = Buffer.from(`m`)
+        this.ansi_fg_begin  = Buffer.from(`\x1b[38;2;`)
+        this.ansi_fg_end    = Buffer.from(`m`)
+        this.ansi_newline   = Buffer.from('\x1b[48;2;0;0;0m\n')
+        this.ansi_reset     = Buffer.concat([
             Buffer.from(`\x1b[${this.size.width}D`),
             Buffer.from(`\x1b[${this.size.height}A`)
         ])

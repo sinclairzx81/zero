@@ -36,6 +36,6 @@ export interface Terminal {
     /** The height of this terminal */
     readonly height: number
     
-    /** Asynchronously submits this buffer. */
-    present(texture: Texture): Promise<void>
+    /** submits this buffer. */
+    present(texture: Texture): void
 }
