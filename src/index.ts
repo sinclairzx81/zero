@@ -44,16 +44,17 @@ ________ ___________  ____             __| _/____   _____   ____
       reduce your terminal font size for better resolution                                                   
 `)
 
-const terminal  = process.argv.includes('--color') ? new ColorTerminal() : new AsciiTerminal()
-const animation = load_animation(join(__dirname, './scene'))
-const scene     = load_scene(join(__dirname, './scene'))
-const renderer  = new Renderer(terminal)
-const camera    = new Camera()
-const stopwatch = new Stopwatch()
+const terminal        = process.argv.includes('--color') ? new ColorTerminal() : new AsciiTerminal()
+const aspect_multiply = process.argv.includes('--color') ? 1.0 : 2.0
+const animation       = load_animation(join(__dirname, './scene'))
+const scene           = load_scene(join(__dirname, './scene'))
+const renderer        = new Renderer(terminal)
+const camera          = new Camera()
+const stopwatch       = new Stopwatch()
 
 function loop() {
     process.title = `zero-demo: ${terminal.width} x ${terminal.height} @ ${stopwatch.get()} fps - Sinclair: November 2019`
-    const aspect  = terminal.width / (terminal.height * 2.0)
+    const aspect  = terminal.width / (terminal.height * aspect_multiply)
     const state   = animation.state('camera', (Date.now() / 24) % animation.length('camera'))
     camera.projection = Matrix.perspectiveFov(Radian.fromAngle(90), aspect, 0.1, 1000)
     camera.view = Matrix.lookAt(
