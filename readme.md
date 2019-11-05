@@ -5,7 +5,7 @@
 <p>A graphics pipeline implemented in JavaScript and rendered to the terminal. No GPU 
 required.</p>
 
-<img src='https://github.com/sinclairzx81/zero/raw/master/terminal.gif'></img>
+<img src='terminal.gif'></img>
 
 [![NPM package](https://badge.fury.io/js/zero-demo.svg)](https://www.npmjs.com/package/zero-demo)
 
