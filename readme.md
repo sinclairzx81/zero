@@ -2,7 +2,7 @@
 
 <h1>Zero</h1>
 
-<p>A graphics pipeline implemented in JavaScript and rendered to the terminal. No GPU 
+<p>A 3D renderer entirely in JavaScript and rendered to the terminal. No GPU 
 required.</p>
 
 <img src='https://github.com/sinclairzx81/zero/raw/master/terminal.gif'></img>
@@ -21,7 +21,7 @@ $ npx zero-demo@latest --color
 
 ### Overview
 
-Zero is a small graphics demo that uses JavaScript to replicate the functionality of a GPU and uses the terminal to display its rendered output via nodejs' stdout. Zero was written for fun and to push JavaScript performance. ASCII rendering has been tested on Windows, OSX and Linux terminals. ANSI 24-bit true color rendering has been tested on Cygwin (Windows) and Linux Mint terminals, but should work on most terminals that support true color.
+Zero is a small graphics demo that implements a 3D renderer entirely in JavaScript and renders it's output to a terminal via nodejs' stdout. Zero was written for fun and to push JavaScript performance. ASCII rendering has been tested on Windows, OSX and Linux terminals. ANSI 24-bit true color rendering has been tested on Cygwin (Windows) and Linux Mint terminals, but should work on most terminals that support true color.
 
 This project and associative materials are offered as is to anyone who may find them of use.
 
