@@ -2,7 +2,7 @@
 
 <h1>Zero</h1>
 
-<p>A 3D renderer entirely in JavaScript and rendered to the terminal. No GPU 
+<p>A 3D renderer built entirely in JavaScript and rendered to the terminal. No GPU 
 required.</p>
 
 <img src='https://github.com/sinclairzx81/zero/raw/master/terminal.gif'></img>
