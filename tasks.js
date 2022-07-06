@@ -35,6 +35,6 @@ export async function pack() {
 // installs the 'zero-zx81' demo.
 export async function install_cli() {
     await pack()
-    const package = JSON.parse(await file('package.json').read('utf-8'))
-    await shell(`cd pack && npm install zero-demo-${package['version']}.tgz -g`).exec()
+    const packageJson = JSON.parse(await file('package.json').read('utf-8'))
+    await shell(`cd pack && npm install zero-demo-${packageJson['version']}.tgz -g`).exec()
 }
